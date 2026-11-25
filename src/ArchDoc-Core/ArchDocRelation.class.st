@@ -50,6 +50,22 @@ ArchDocRelation class >> fromMethod: aCompiledMethod [
 	^ self new readFromPragma: pragma
 ]
 
+{ #category : 'instance creation' }
+ArchDocRelation class >> fromTableRow: anArray declaredIn: aClass [
+	"Answer the relation one row of a class-side archRelations table states. The row is the
+	 role, the multiplicity, the target and the opposite; nil names no opposite."
+
+	^ self new readFromTableRow: anArray declaredIn: aClass
+]
+
+{ #category : 'accessing' }
+ArchDocRelation >> declaringClass [
+	"The class that declares me. For a declaration on the class side, this is the metaclass, and
+	 that is the truth: the holding is the class's own, not its instances'."
+
+	^ declaringClass
+]
+
 { #category : 'testing' }
 ArchDocRelation >> hasOpposite [
 	"Does my declaration name the role by which my target holds my holder back? The checker
@@ -60,19 +76,20 @@ ArchDocRelation >> hasOpposite [
 
 { #category : 'inspector' }
 ArchDocRelation >> inspectionDeclaration: aBuilder [
-	"Show what I am, each row asking me rather than restating my pragma, and say whether my
-	 target resolves in this image — which is the one thing about me that can be false."
+	"What I declare, in words, one row per thing I state."
 
 	<inspectorPresentationOrder: 1 title: 'Declaration'>
 	^ aBuilder newTable
 		items: {
 				'holder' -> declaringClass name.
 				'role' -> role.
-				'multiplicity' -> (self isToOne ifTrue: [ 'one' ] ifFalse: [ 'many' ]).
-				'kind' -> (self isCache ifTrue: [ 'cache, built on first use' ] ifFalse: [ 'structural' ]).
-				'opposite' -> (self hasOpposite ifTrue: [ oppositeRole ] ifFalse: [ 'none declared' ]).
+				'multiplicity' -> self multiplicityDescription.
+				'kind' -> (self isCache
+					ifTrue: [ 'cache, built on first use' ]
+					ifFalse: [ 'structural' ]).
+				'opposite' -> self oppositeDescription.
 				'target' -> targetName.
-				'target resolves' -> (self isTargetLoaded ifTrue: [ 'yes' ] ifFalse: [ 'NO: nothing of that name is loaded' ]) };
+				'target resolves' -> self targetDescription };
 		addColumn: ((SpStringTableColumn title: 'What' evaluated: [ :each | each key ]) width: 140);
 		addColumn: (SpStringTableColumn title: 'Says' evaluated: [ :each | each value asString ]);
 		yourself
@@ -107,6 +124,27 @@ ArchDocRelation >> isToMany [
 { #category : 'testing' }
 ArchDocRelation >> isToOne [
 	^ multiplicity = #one
+]
+
+{ #category : 'describing' }
+ArchDocRelation >> kindDescription [
+	^ self isCache
+		ifTrue: [ 'cache' ]
+		ifFalse: [ 'holding' ]
+]
+
+{ #category : 'describing' }
+ArchDocRelation >> multiplicityDescription [
+	^ self isToMany
+		ifTrue: [ 'many' ]
+		ifFalse: [ 'one' ]
+]
+
+{ #category : 'describing' }
+ArchDocRelation >> oppositeDescription [
+	^ self hasOpposite
+		ifTrue: [ oppositeRole asString ]
+		ifFalse: [ 'none declared' ]
 ]
 
 { #category : 'accessing' }
@@ -148,6 +186,23 @@ ArchDocRelation >> readFromPragma: aPragma [
 		ifFalse: [ nil ]
 ]
 
+{ #category : 'initialization' }
+ArchDocRelation >> readFromTableRow: anArray declaredIn: aClass [
+	"One shape of row states a structural holding and a cache alike: the multiplicity carries
+	 both facts, as #one, #many, #cacheOne or #cacheMany."
+
+	| stated |
+	role := anArray first.
+	declaringClass := aClass.
+	stated := anArray second.
+	isCache := #( #cacheOne #cacheMany ) includes: stated.
+	multiplicity := (#( #many #cacheMany ) includes: stated)
+		ifTrue: [ #many ]
+		ifFalse: [ #one ].
+	targetName := anArray third.
+	oppositeRole := anArray fourth
+]
+
 { #category : 'accessing' }
 ArchDocRelation >> role [
 	"The selector of the accessor I was declared on, which is also the name of the instance
@@ -162,6 +217,16 @@ ArchDocRelation >> targetClass [
 	 raise, because a declaration pointing at an unloaded package is a finding and not an error."
 
 	^ Smalltalk globals at: targetName ifAbsent: [ nil ]
+]
+
+{ #category : 'describing' }
+ArchDocRelation >> targetDescription [
+	"Says whether the named target resolves, because a declaration pointing at nothing is the
+	 one row of a table that a reader must act on."
+
+	^ self isTargetLoaded
+		ifTrue: [ 'yes' ]
+		ifFalse: [ 'NO: nothing of that name is loaded' ]
 ]
 
 { #category : 'accessing' }
