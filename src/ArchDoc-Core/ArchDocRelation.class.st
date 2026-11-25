@@ -5,7 +5,7 @@ I am read from a pragma on the accessor that reads the instance variable, which 
 
 ```
 child
-	<archRelation: #one to: #ArchDocRelationFixture opposite: #children>
+	<archRelation: #one to: #ArchDocDeclaredSubject opposite: #children>
 	^ child
 ```
 
@@ -14,6 +14,8 @@ Three pragmas declare a relation. `archRelation:to:` states a holding, `archRela
 A pragma is a literal, so declaring a relation costs the declaring package no dependency on ArchDoc.
 
 I name my target by symbol and not by class, so that a declaration survives a target that is not loaded. `ArchDocChecker` is what reports a target symbol that resolves to nothing.
+
+`ArchDocDeclaredSubject`, in the examples package, declares one relation of each kind, and `ArchDocRelationExamples` opens one.
 "
 Class {
 	#name : 'ArchDocRelation',
