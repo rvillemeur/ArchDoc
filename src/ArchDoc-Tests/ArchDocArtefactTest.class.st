@@ -14,7 +14,10 @@ Class {
 
 { #category : 'accessing' }
 ArchDocArtefactTest >> documentedClasses [
-	^ (Smalltalk packageOrganizer packageNamed: 'ArchDoc-Core') definedClasses asArray
+	"Both code packages. The Roassal package carries one class, and it is held to the same rules."
+
+	^ (#( 'ArchDoc-Core' 'ArchDoc-Roassal' ) flatCollect: [ :each |
+		(Smalltalk packageOrganizer packageNamed: each) definedClasses ]) asArray
 ]
 
 { #category : 'accessing' }
@@ -32,14 +35,16 @@ ArchDocArtefactTest >> presenterOf: aSelector on: anObject [
 { #category : 'accessing' }
 ArchDocArtefactTest >> sampleInstances [
 	"Every object the class-side <sampleInstance> examples of ArchDoc-Examples answer, run now,
-	 so that an example which no longer runs fails here rather than under a reader's click."
+	 so that an example which no longer runs fails here rather than under a reader's click. An
+	 example named open… is left out: a suite may not open windows."
 
 	| found |
 	found := OrderedCollection new.
 	(Smalltalk packageOrganizer packageNamed: 'ArchDoc-Examples') definedClasses do: [ :each |
 		each class methods do: [ :method |
-			(method pragmas anySatisfy: [ :pragma | pragma selector = #sampleInstance ])
-				ifTrue: [ found add: (each perform: method selector) ] ] ].
+			((method pragmas anySatisfy: [ :pragma | pragma selector = #sampleInstance ])
+				and: [ (ArchDocChecker opensAWindow: method selector) not ])
+					ifTrue: [ found add: (each perform: method selector) ] ] ].
 	^ found asArray
 ]
 

@@ -39,6 +39,14 @@ ArchDocChecker class >> onPackageNamed: aString [
 	^ self onModel: (ArchDocModel onPackageNamed: aString)
 ]
 
+{ #category : 'testing' }
+ArchDocChecker class >> opensAWindow: aSelector [
+	"By convention an example that opens a window is named open… . Nothing that reads a package
+	 in batch may run one: a suite that opens windows cannot be run unattended."
+
+	^ aSelector beginsWith: 'open'
+]
+
 { #category : 'private' }
 ArchDocChecker >> finding: aRelation in: anObject saying: aString [
 	^ ArchDocFinding
@@ -125,6 +133,12 @@ ArchDocChecker >> inspectionFindings: aBuilder [
 ]
 
 { #category : 'private' }
+ArchDocChecker >> isBatchExample: aCompiledMethod [
+	^ (aCompiledMethod pragmas anySatisfy: [ :each | each selector = #sampleInstance ])
+		and: [ (self class opensAWindow: aCompiledMethod selector) not ]
+]
+
+{ #category : 'private' }
 ArchDocChecker >> isReciprocal: aRelation [
 	"True when the target of aRelation declares the named opposite role, pointing back at the
 	 class that declared aRelation."
@@ -203,18 +217,18 @@ ArchDocChecker >> sampleInstanceViolations [
 { #category : 'accessing' }
 ArchDocChecker >> sampleInstances [
 	"Every object the examples answer whose class my model's package defines. Running an example
-	 is how this library reads a live object: there is no other registry of instances."
+	 is how this library reads a live object: there is no other registry of instances. An example
+	 named open… is skipped, since it opens a window."
 
 	| classes found |
 	classes := model package definedClasses.
 	found := OrderedCollection new.
 	self samplePackage definedClasses do: [ :each |
 		each class methods do: [ :method |
-			(method pragmas anySatisfy: [ :pragma | pragma selector = #sampleInstance ])
-				ifTrue: [
-					| answered |
-					answered := each perform: method selector.
-					(classes includes: answered class) ifTrue: [ found add: answered ] ] ] ].
+			(self isBatchExample: method) ifTrue: [
+				| answered |
+				answered := each perform: method selector.
+				(classes includes: answered class) ifTrue: [ found add: answered ] ] ] ].
 	^ found asArray
 ]
 
