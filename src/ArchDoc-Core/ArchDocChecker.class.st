@@ -105,10 +105,12 @@ ArchDocChecker >> findings [
 ArchDocChecker >> forbiddenDependencies [
 	"Every edge of my model that reaches a package the manifest forbids. This is the rule a
 	 project states in one place and a test reads: a layering rule belongs beside the package,
-	 not in a markdown file that drifts."
+	 not in a markdown file that drifts. It reads allEdges and not the graph: the graph draws
+	 uses between its own nodes alone, and a forbidden reference points out of the diagram by
+	 definition."
 
 	self forbiddenPackageNames ifEmpty: [ ^ #() ].
-	^ (model graph edges
+	^ (model allEdges
 		select: [ :each | self forbids: (self packageNameOf: each target) ])
 		collect: [ :each |
 			ArchDocFinding

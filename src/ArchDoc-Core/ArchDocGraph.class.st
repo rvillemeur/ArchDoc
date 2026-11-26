@@ -13,16 +13,25 @@ Class {
 	#instVars : [
 		'title',
 		'nodes',
-		'edges'
+		'edges',
+		'homeNodes'
 	],
-	#category : 'ArchDoc-Core-Graphs',
-	#package : 'ArchDoc-Core',
-	#tag : 'Graphs'
+	#category : 'ArchDoc-Core',
+	#package : 'ArchDoc-Core'
 }
 
 { #category : 'instance creation' }
 ArchDocGraph class >> title: aString nodes: aCollection edges: anotherCollection [
 	^ self new setTitle: aString nodes: aCollection edges: anotherCollection
+]
+
+{ #category : 'instance creation' }
+ArchDocGraph class >> title: aString nodes: aCollection edges: anotherCollection home: homeCollection [
+	^ self new
+		setTitle: aString
+		nodes: aCollection
+		edges: anotherCollection
+		home: homeCollection
 ]
 
 { #category : 'describing' }
@@ -49,6 +58,14 @@ ArchDocGraph >> edgesOfKind: aSymbol [
 	"So that a renderer draws each kind in its own style without restating what the kinds are."
 
 	^ edges select: [ :each | each kind = aSymbol ]
+]
+
+{ #category : 'testing' }
+ArchDocGraph >> holdsAtHome: aNode [
+	"Does this node belong to what the diagram is about — a class the drawn package defines,
+	 rather than one a declaration reaches into another package for?"
+
+	^ homeNodes includes: aNode
 ]
 
 { #category : 'inspector' }
@@ -100,9 +117,18 @@ ArchDocGraph >> printOn: aStream [
 
 { #category : 'initialization' }
 ArchDocGraph >> setTitle: aString nodes: aCollection edges: anotherCollection [
+	"A graph that names no home is at home everywhere: a graph of live objects is about the
+	 objects themselves, and no node of it is a visitor."
+
+	self setTitle: aString nodes: aCollection edges: anotherCollection home: aCollection
+]
+
+{ #category : 'initialization' }
+ArchDocGraph >> setTitle: aString nodes: aCollection edges: anotherCollection home: homeCollection [
 	title := aString.
 	nodes := aCollection asArray.
-	edges := anotherCollection asArray
+	edges := anotherCollection asArray.
+	homeNodes := homeCollection asSet
 ]
 
 { #category : 'accessing' }

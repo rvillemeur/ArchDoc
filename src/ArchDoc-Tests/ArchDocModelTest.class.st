@@ -6,6 +6,27 @@ Class {
 }
 
 { #category : 'tests' }
+ArchDocModelTest >> testAGraphOfAPackageKnowsWhichOfItsNodesLiveThere [
+	"A diagram of a package shows classes from elsewhere when a declaration points at them. The
+	 graph is what says which is which, because it is the graph that knows what it is a diagram of."
+
+	| graph |
+	graph := (ArchDocModel onPackageNamed: 'ArchDoc-Examples') graph.
+	self assert: (graph holdsAtHome: ArchDocDeclaredSubject).
+	self deny: (graph holdsAtHome: ArchDocRelation)
+]
+
+{ #category : 'tests' }
+ArchDocModelTest >> testAPackageManifestIsNoNodeOfItsOwnDiagram [
+	"A manifest states the rules the package is held to. It is not a part of the design the
+	 diagram draws, so it is no node of it."
+
+	| model |
+	model := ArchDocModel onPackageNamed: 'ArchDoc-Examples'.
+	self deny: ((model graph nodes collect: [ :each | each name ]) includes: #ManifestArchDocExamples)
+]
+
+{ #category : 'tests' }
 ArchDocModelTest >> testAnExtensionMethodFromAnotherPackageIsNotAUseOfThisOne [
 	"ArchDocGraph carries a Diagram tab that ArchDoc-Roassal installs on it. That method names
 	 ArchDocGraphRenderer, but the reference belongs to the package that owns the method, not to
@@ -16,6 +37,19 @@ ArchDocModelTest >> testAnExtensionMethodFromAnotherPackageIsNotAUseOfThisOne [
 	model := ArchDocModel onPackageNamed: 'ArchDoc-Core'.
 	reached := model classesReferencedBy: ArchDocGraph.
 	self deny: (reached includes: ArchDocGraphRenderer)
+]
+
+{ #category : 'tests' }
+ArchDocModelTest >> testAnInferredUseOfAClassNoDeclarationReachesIsLeftOutOfTheGraph [
+	"A diagram of a package is about that package. A class reached from it that no declaration
+	 points at — a kernel class, a collection, a widget — is a node nobody asked for, and thirty
+	 of them is how a diagram stops being readable. Such a use is left out, node and edge alike."
+
+	| model targets |
+	model := ArchDocModel onPackageNamed: 'ArchDoc-Examples'.
+	targets := (model graph edges collect: [ :each | each target ]) asSet.
+	self deny: (targets includes: Dictionary).
+	self deny: ((model graph nodes collect: [ :each | each name ]) includes: #Dictionary)
 ]
 
 { #category : 'tests' }
@@ -57,7 +91,7 @@ ArchDocModelTest >> testModelOfAPackageCollectsEveryDeclaredRelationAndNothingEl
 	roles := ((model relations select: [ :each | each declaringClass = ArchDocDeclaredSubject ])
 		collect: [ :each | each role ]) asSortedCollection asArray.
 	self assert: roles
-		equals: #( #answers #child #children #ghost #warmCache #warmCacheWithOpposite ).
+		equals: #( #answers #child #children #ghost #stamp #warmCache #warmCacheWithOpposite ).
 	self deny: (roles includes: #scratch)
 ]
 

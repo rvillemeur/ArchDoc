@@ -38,6 +38,15 @@ ArchDocModel class >> onPackageNamed: aString [
 ]
 
 { #category : 'accessing' }
+ArchDocModel >> allEdges [
+	"Every fact I hold, drawn or not: the declarations and every inferred use, including the ones
+	 whose target is no node of the diagram. The checker reads this rather than the graph, because
+	 a reference to a package the manifest forbids is exactly a reference out of the diagram."
+
+	^ self declaredEdges , self inferredUses asArray
+]
+
+{ #category : 'accessing' }
 ArchDocModel >> classesReferencedBy: aClass [
 	"The classes the methods of this package install on aClass name. A method another package
 	 installs on aClass is that package's reference, not this one's: the Diagram tab of
@@ -53,13 +62,15 @@ ArchDocModel >> classesReferencedBy: aClass [
 { #category : 'private' }
 ArchDocModel >> collectInferredUses [
 	"A class reached by the code of one of mine, that no declaration of mine mentions, and that
-	 is not the reaching class itself. A set, so that many methods stating the same reference
-	 yield one arrow."
+	 is not the reaching class itself. Every one of them, including the classes of other projects:
+	 this is what the checker reads to report a forbidden dependency, so filtering here would
+	 blind it. The diagram draws a part of this set; see drawnUses. A set, so that many methods
+	 stating the same reference yield one arrow."
 
 	| declared found |
 	declared := self declaredPairs.
 	found := Set new.
-	package definedClasses do: [ :holder |
+	(package definedClasses reject: [ :each | self isManifest: each ]) do: [ :holder |
 		(self classesReferencedBy: holder) do: [ :reached |
 			(reached = holder or: [ declared includes: holder -> reached ])
 				ifFalse: [ found add: (ArchDocEdge useFrom: holder to: reached) ] ] ].
@@ -105,15 +116,31 @@ ArchDocModel >> declaredPairs [
 		asSet
 ]
 
+{ #category : 'private' }
+ArchDocModel >> drawnUses [
+	"The inferred uses the diagram shows: those between two nodes of it. A use of a class the
+	 diagram does not hold would drag that class in, and a package reaches dozens — kernel
+	 classes, collections, widgets — so the picture would stop answering what holds what. The
+	 checker reads inferredUses, which holds them all."
+
+	| drawn |
+	drawn := self nodes asSet.
+	^ (self inferredUses select: [ :each |
+		   (drawn includes: each source) and: [ drawn includes: each target ] ]) asArray
+]
+
 { #category : 'accessing' }
 ArchDocModel >> graph [
 	"The class diagram of my package: one node per class of mine, plus every class my
-	 declarations point at, and one edge per fact — a holding, a cache or an inferred use."
+	 declarations point at, and one edge per fact — a holding, a cache, or a use between two
+	 classes the diagram already holds. The classes of my package are its home, so the drawing
+	 can tell a resident from a visitor."
 
 	^ ArchDocGraph
 		title: package name
 		nodes: self nodes
-		edges: self declaredEdges , self inferredUses asArray
+		edges: self declaredEdges , self drawnUses
+		home: (package definedClasses reject: [ :each | self isManifest: each ])
 ]
 
 { #category : 'accessing' }
@@ -154,15 +181,22 @@ ArchDocModel >> inspectionUses: aBuilder [
 		yourself
 ]
 
+{ #category : 'private' }
+ArchDocModel >> isManifest: aClass [
+	^ aClass inheritsFrom: PackageManifest
+]
+
 { #category : 'accessing' }
 ArchDocModel >> nodes [
-	"The classes of my package, and every further class an edge of mine reaches, so that no edge
-	 points at a node the graph does not hold."
+	"The classes of my package and every class a declaration of mine points at. Nothing else: a
+	 class merely reached by my code is a node nobody asked for, and a diagram carrying thirty of
+	 them answers no question. A manifest states the rules the package is held to rather than a
+	 part of its design, so it is no node either."
 
 	| found |
-	found := Set newFrom: package definedClasses.
+	found := Set newFrom:
+		(package definedClasses reject: [ :each | self isManifest: each ]).
 	self declaredEdges do: [ :each | found add: each target ].
-	self inferredUses do: [ :each | found add: each target ].
 	^ found asArray
 ]
 

@@ -27,6 +27,22 @@ ArchDocGraphRendererTest >> testACacheIsDashedAndAnInferredUseIsFainterThanAHold
 ]
 
 { #category : 'tests' }
+ArchDocGraphRendererTest >> testANodeIsABoxedLabelAndAVisitorIsNotFilledLikeAResident [
+	"A bare label tells the layout nothing about its extent, so the labels pile on top of one
+	 another. A box has a size. The fill says which classes belong to the package being drawn, so
+	 the boundary of the package is read off the picture and not off a legend."
+
+	| renderer boxOf |
+	renderer := ArchDocGraphRenderer onPackageNamed: 'ArchDoc-Examples'.
+	boxOf := [ :className |
+		((renderer canvas nodes detect: [ :each | each model name = className ]) shapes
+			detect: [ :each | each class = RSBox ]) ].
+	self assert: (boxOf value: #ArchDocDeclaredSubject) color
+		equals: renderer residentColor.
+	self assert: (boxOf value: #Date) color equals: renderer visitorColor
+]
+
+{ #category : 'tests' }
 ArchDocGraphRendererTest >> testARendererIsBuiltFromAPackageNameAlone [
 	"A reader of a package has a name and nothing else, so the renderer takes one and reads the
 	 model itself."
@@ -38,6 +54,34 @@ ArchDocGraphRendererTest >> testARendererIsBuiltFromAPackageNameAlone [
 ]
 
 { #category : 'tests' }
+ArchDocGraphRendererTest >> testAnArrowHeadStopsAtTheEdgeOfTheBoxItPointsAt [
+	"A line drawn between two centres puts its arrow head in the middle of the target's name,
+	 where it is read as a stray mark over a word. It must stop at the border of the box: a point
+	 on the border is right, a point inside it is not."
+
+	| renderer line target |
+	renderer := ArchDocGraphRenderer onPackageNamed: 'ArchDoc-Examples'.
+	line := renderer canvas lines detect: [ :each | each model isUse not ].
+	target := line to.
+	self deny: ((target encompassingRectangle insetBy: 1) containsPoint: line endPoint)
+]
+
+{ #category : 'tests' }
+ArchDocGraphRendererTest >> testNoTwoNodesOfADrawnPackageOverlap [
+	"The complaint a reader makes about a diagram is that the names lie on top of one another.
+	 The layout must keep the boxes apart, so the test states it of the real font package, the
+	 one that failed: seventeen boxes, none covering another."
+
+	| renderer boxes |
+	renderer := ArchDocGraphRenderer onPackageNamed: 'ArchDoc-Examples'.
+	boxes := renderer canvas nodes collect: [ :each | each encompassingRectangle ].
+	boxes doWithIndex: [ :one :index |
+		(boxes copyFrom: index + 1 to: boxes size) do: [ :other |
+			self deny: (one intersects: other)
+				description: 'two nodes of the diagram cover one another' ] ]
+]
+
+{ #category : 'tests' }
 ArchDocGraphRendererTest >> testTheCanvasHoldsOneShapePerNodeAndOneLinePerEdge [
 	| graph canvas |
 	graph := self exampleGraph.
@@ -46,6 +90,17 @@ ArchDocGraphRendererTest >> testTheCanvasHoldsOneShapePerNodeAndOneLinePerEdge [
 	self assert: canvas lines size equals: graph edges size.
 	self assert: (canvas nodes collect: [ :each | each model ]) asSet
 		equals: graph nodes asSet
+]
+
+{ #category : 'tests' }
+ArchDocGraphRendererTest >> testTheCanvasIsDrawnOnceAndKept [
+	"The layout places the nodes at random and then pushes them apart, so a second drawing is a
+	 different picture. A reader who scrolls a diagram and asks it a question twice must be
+	 looking at one picture, so the canvas is built once and kept."
+
+	| renderer |
+	renderer := ArchDocGraphRenderer onPackageNamed: 'ArchDoc-Examples'.
+	self assert: renderer canvas == renderer canvas
 ]
 
 { #category : 'tests' }

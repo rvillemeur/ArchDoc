@@ -20,14 +20,14 @@ Class {
 		'scratch',
 		'ghost',
 		'warmCacheWithOpposite',
-		'answers'
+		'answers',
+		'stamp'
 	],
 	#classInstVars : [
 		'defaultSubject'
 	],
-	#category : 'ArchDoc-Examples-Subjects',
-	#package : 'ArchDoc-Examples',
-	#tag : 'Subjects'
+	#category : 'ArchDoc-Examples',
+	#package : 'ArchDoc-Examples'
 }
 
 { #category : 'architecture' }
@@ -105,6 +105,15 @@ ArchDocDeclaredSubject >> scratch [
 	 architecture. The model meets one of these on nearly every method it reads."
 
 	^ scratch
+]
+
+{ #category : 'accessing' }
+ArchDocDeclaredSubject >> stamp [
+	"A holding of a class from another package: the diagram draws such a target as a node too,
+	 and marks it a visitor, so a reader sees where the package stops."
+
+	<archRelation: #one to: #Date>
+	^ stamp ifNil: [ stamp := Date today ]
 ]
 
 { #category : 'accessing' }
