@@ -20,8 +20,9 @@ Class {
 		'metadata',
 		'outlines'
 	],
-	#category : 'ArchDoc-Examples',
-	#package : 'ArchDoc-Examples'
+	#category : 'ArchDoc-Examples-Subjects',
+	#package : 'ArchDoc-Examples',
+	#tag : 'Subjects'
 }
 
 { #category : 'declarations' }

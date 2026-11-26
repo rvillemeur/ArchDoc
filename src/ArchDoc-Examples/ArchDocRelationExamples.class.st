@@ -6,8 +6,9 @@ Every example is class-side, takes no argument, rebuilds its object on every cal
 Class {
 	#name : 'ArchDocRelationExamples',
 	#superclass : 'Object',
-	#category : 'ArchDoc-Examples',
-	#package : 'ArchDoc-Examples'
+	#category : 'ArchDoc-Examples-Examples',
+	#package : 'ArchDoc-Examples',
+	#tag : 'Examples'
 }
 
 { #category : 'examples' }

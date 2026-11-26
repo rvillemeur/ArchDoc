@@ -40,6 +40,20 @@ ArchDocRelation class >> declarationSelectors [
 ]
 
 { #category : 'instance creation' }
+ArchDocRelation class >> declaredBy: aClass [
+	"Every relation aClass declares, by a pragma on either side or by its class-side table.
+	 Asked of one class, so that a reader of a relation can ask its target what it declares back
+	 without a model of the target's package."
+
+	| found |
+	found := OrderedCollection new.
+	(aClass instanceSide methods , aClass instanceSide class methods) do: [ :method |
+		(self fromMethod: method) ifNotNil: [ :relation | found add: relation ] ].
+	found addAll: (self tableDeclarationsOf: aClass instanceSide).
+	^ found asArray
+]
+
+{ #category : 'instance creation' }
 ArchDocRelation class >> fromMethod: aCompiledMethod [
 	"Answer the relation the method declares, or nil when it declares none."
 
@@ -56,6 +70,15 @@ ArchDocRelation class >> fromTableRow: anArray declaredIn: aClass [
 	 role, the multiplicity, the target and the opposite; nil names no opposite."
 
 	^ self new readFromTableRow: anArray declaredIn: aClass
+]
+
+{ #category : 'instance creation' }
+ArchDocRelation class >> tableDeclarationsOf: aClass [
+	"The rows of a class-side archRelations table, which is where a class that exposes no
+	 accessor declares what it holds."
+
+	(aClass class canUnderstand: #archRelations) ifFalse: [ ^ #() ].
+	^ aClass archRelations collect: [ :row | self fromTableRow: row declaredIn: aClass ]
 ]
 
 { #category : 'accessing' }

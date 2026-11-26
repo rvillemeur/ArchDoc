@@ -66,17 +66,12 @@ ArchDocModel >> collectInferredUses [
 
 { #category : 'private' }
 ArchDocModel >> collectRelations [
-	"Read the declarations of every class of my package, on both sides, because a class-side
-	 holding — a cached default, a registry — is as much part of the architecture as an
-	 instance-side one. A class that exposes no accessor declares in a class-side table instead,
-	 and both sources yield the same relations."
+	"Asked of each class of mine, since a relation is declared by a class and not by a package."
 
 	| found |
 	found := OrderedCollection new.
 	package definedClasses do: [ :each |
-		(each methods , each class methods) do: [ :method |
-			(ArchDocRelation fromMethod: method) ifNotNil: [ :relation | found add: relation ] ].
-		found addAll: (self tableRelationsOf: each) ].
+		found addAll: (ArchDocRelation declaredBy: each) ].
 	^ found asArray
 ]
 
@@ -168,6 +163,16 @@ ArchDocModel >> nodes [
 ]
 
 { #category : 'accessing' }
+ArchDocModel >> package [
+	^ package
+]
+
+{ #category : 'accessing' }
+ArchDocModel >> packageName [
+	^ package name
+]
+
+{ #category : 'accessing' }
 ArchDocModel >> relations [
 	"Every relation the classes of my package declare, computed once."
 
@@ -177,14 +182,4 @@ ArchDocModel >> relations [
 { #category : 'initialization' }
 ArchDocModel >> setPackage: aPackage [
 	package := aPackage
-]
-
-{ #category : 'private' }
-ArchDocModel >> tableRelationsOf: aClass [
-	"The relations a class declares in a class-side archRelations table, which is how a class
-	 that exposes no accessor declares them. A class answering no such table declares none."
-
-	(aClass class canUnderstand: #archRelations) ifFalse: [ ^ #() ].
-	^ aClass archRelations collect: [ :row |
-		ArchDocRelation fromTableRow: row declaredIn: aClass ]
 ]
