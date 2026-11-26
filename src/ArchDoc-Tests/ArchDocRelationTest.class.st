@@ -11,6 +11,19 @@ Class {
 }
 
 { #category : 'tests' }
+ArchDocRelationTest >> testACacheCanNameTheRoleItIsReachedBackUnder [
+	"A lazily built adapter points back at the object that built it, and that is worth stating:
+	 archCache:to:opposite: declares a cache and its reciprocal in one pragma."
+
+	| relation |
+	relation := ArchDocRelation
+		fromMethod: ArchDocDeclaredSubject >> #warmCacheWithOpposite.
+	self assert: relation role equals: #warmCacheWithOpposite.
+	self assert: relation isCache.
+	self assert: relation oppositeRole equals: #child
+]
+
+{ #category : 'tests' }
 ArchDocRelationTest >> testAClassSideTableDeclaresWhatTheClassItselfHolds [
 	"A cache kept for the session lives in a class-side instance variable, so its holder is the
 	 class and not an instance. archClassRelations declares those, and the relation says the

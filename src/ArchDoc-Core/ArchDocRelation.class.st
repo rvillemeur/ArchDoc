@@ -44,11 +44,12 @@ ArchDocRelation class >> classTableDeclarationsOf: aClass [
 		collect: [ :row | self fromTableRow: row declaredIn: aClass class ]
 ]
 
-{ #category : 'declarations' }
+{ #category : 'accessing' }
 ArchDocRelation class >> declarationSelectors [
-	"The pragmas that declare a relation. A method carrying none of them declares nothing."
+	"The pragmas that declare a relation. A method carrying none of them declares nothing.
+	 Each kind comes in two forms, with and without the role it is reached back under."
 
-	^ #( #archRelation:to: #archRelation:to:opposite: #archCache:to: )
+	^ #( #archRelation:to: #archRelation:to:opposite: #archCache:to: #archCache:to:opposite: )
 ]
 
 { #category : 'instance creation' }
@@ -224,7 +225,7 @@ ArchDocRelation >> readFromPragma: aPragma [
 
 	role := aPragma methodSelector.
 	declaringClass := aPragma methodClass.
-	isCache := aPragma selector = #archCache:to:.
+	isCache := #( #archCache:to: #archCache:to:opposite: ) includes: aPragma selector.
 	multiplicity := aPragma argumentAt: 1.
 	targetName := aPragma argumentAt: 2.
 	oppositeRole := aPragma numArgs >= 3

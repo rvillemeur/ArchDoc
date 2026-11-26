@@ -18,7 +18,8 @@ Class {
 		'children',
 		'warmCache',
 		'scratch',
-		'ghost'
+		'ghost',
+		'warmCacheWithOpposite'
 	],
 	#classInstVars : [
 		'defaultSubject'
@@ -92,4 +93,16 @@ ArchDocDeclaredSubject >> warmCache [
 
 	<archCache: #one to: #ArchDocDeclaredSubject>
 	^ warmCache ifNil: [ warmCache := self class new ]
+]
+
+{ #category : 'accessing' }
+ArchDocDeclaredSubject >> warmCacheWithOpposite [
+	"A cache that points back: built on first use, and the object it answers reaches me again
+	 under child. This is the shape of an adapter a subject builds for another library."
+
+	<archCache: #one to: #ArchDocDeclaredSubject opposite: #child>
+	^ warmCacheWithOpposite ifNil: [
+		warmCacheWithOpposite := self class new
+			child: self;
+			yourself ]
 ]
