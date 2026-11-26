@@ -6,6 +6,19 @@ Class {
 }
 
 { #category : 'tests' }
+ArchDocModelTest >> testAnExtensionMethodFromAnotherPackageIsNotAUseOfThisOne [
+	"ArchDocGraph carries a Diagram tab that ArchDoc-Roassal installs on it. That method names
+	 ArchDocGraphRenderer, but the reference belongs to the package that owns the method, not to
+	 the package that defines the class, or every extended class would read as depending on
+	 whatever extends it."
+
+	| model reached |
+	model := ArchDocModel onPackageNamed: 'ArchDoc-Core'.
+	reached := model classesReferencedBy: ArchDocGraph.
+	self deny: (reached includes: ArchDocGraphRenderer)
+]
+
+{ #category : 'tests' }
 ArchDocModelTest >> testGraphHoldsOneNodePerClassAndOneEdgePerFact [
 	| model graph edgeOf |
 	model := ArchDocModel onPackageNamed: 'ArchDoc-Examples'.

@@ -25,8 +25,9 @@ Class {
 		'model',
 		'samplePackageName'
 	],
-	#category : 'ArchDoc-Core',
-	#package : 'ArchDoc-Core'
+	#category : 'ArchDoc-Core-Checking',
+	#package : 'ArchDoc-Core',
+	#tag : 'Checking'
 }
 
 { #category : 'instance creation' }
@@ -72,11 +73,9 @@ ArchDocChecker >> forbiddenDependencies [
 	 project states in one place and a test reads: a layering rule belongs beside the package,
 	 not in a markdown file that drifts."
 
-	| forbidden |
-	forbidden := self forbiddenPackageNames.
-	forbidden ifEmpty: [ ^ #() ].
+	self forbiddenPackageNames ifEmpty: [ ^ #() ].
 	^ (model graph edges
-		select: [ :each | forbidden includes: (self packageNameOf: each target) ])
+		select: [ :each | self forbids: (self packageNameOf: each target) ])
 		collect: [ :each |
 			ArchDocFinding
 				kind: #forbiddenDependency
@@ -97,6 +96,14 @@ ArchDocChecker >> forbiddenPackageNames [
 		(each class canUnderstand: #archDocForbiddenDependencies)
 			ifTrue: [ found addAll: each archDocForbiddenDependencies ] ].
 	^ found asArray
+]
+
+{ #category : 'private' }
+ArchDocChecker >> forbids: aPackageName [
+	"A declaration is a match pattern, not a name, so one line can forbid a whole project:
+	 'Roassal*' answers true for every package of it."
+
+	^ self forbiddenPackageNames anySatisfy: [ :each | each match: aPackageName ]
 ]
 
 { #category : 'inspector' }

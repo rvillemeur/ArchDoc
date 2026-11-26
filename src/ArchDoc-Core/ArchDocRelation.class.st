@@ -28,8 +28,9 @@ Class {
 		'isCache',
 		'declaringClass'
 	],
-	#category : 'ArchDoc-Core',
-	#package : 'ArchDoc-Core'
+	#category : 'ArchDoc-Core-Declarations',
+	#package : 'ArchDoc-Core',
+	#tag : 'Declarations'
 }
 
 { #category : 'declarations' }

@@ -20,8 +20,9 @@ Class {
 		'kind',
 		'label'
 	],
-	#category : 'ArchDoc-Core',
-	#package : 'ArchDoc-Core'
+	#category : 'ArchDoc-Core-Graphs',
+	#package : 'ArchDoc-Core',
+	#tag : 'Graphs'
 }
 
 { #category : 'instance creation' }

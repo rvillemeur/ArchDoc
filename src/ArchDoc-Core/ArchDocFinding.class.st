@@ -13,8 +13,9 @@ Class {
 		'subject',
 		'explanation'
 	],
-	#category : 'ArchDoc-Core',
-	#package : 'ArchDoc-Core'
+	#category : 'ArchDoc-Core-Checking',
+	#package : 'ArchDoc-Core',
+	#tag : 'Checking'
 }
 
 { #category : 'instance creation' }

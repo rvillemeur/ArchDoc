@@ -14,10 +14,13 @@ Class {
 
 { #category : 'accessing' }
 ArchDocArtefactTest >> documentedClasses [
-	"Both code packages. The Roassal package carries one class, and it is held to the same rules."
+	"Both code packages. The Roassal package carries one class, and it is held to the same rules.
+	 A package manifest is left out: it is Pharo's own declaration object, it has no instances
+	 and nothing inspects it."
 
-	^ (#( 'ArchDoc-Core' 'ArchDoc-Roassal' ) flatCollect: [ :each |
-		(Smalltalk packageOrganizer packageNamed: each) definedClasses ]) asArray
+	^ ((#( 'ArchDoc-Core' 'ArchDoc-Roassal' ) flatCollect: [ :each |
+		(Smalltalk packageOrganizer packageNamed: each) definedClasses ])
+		reject: [ :each | each inheritsFrom: PackageManifest ]) asArray
 ]
 
 { #category : 'accessing' }

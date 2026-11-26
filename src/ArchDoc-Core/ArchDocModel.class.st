@@ -22,8 +22,9 @@ Class {
 		'inferredUses',
 		'declaredEdges'
 	],
-	#category : 'ArchDoc-Core',
-	#package : 'ArchDoc-Core'
+	#category : 'ArchDoc-Core-Graphs',
+	#package : 'ArchDoc-Core',
+	#tag : 'Graphs'
 }
 
 { #category : 'instance creation' }
@@ -36,14 +37,15 @@ ArchDocModel class >> onPackageNamed: aString [
 	^ self onPackage: (Smalltalk packageOrganizer packageNamed: aString)
 ]
 
-{ #category : 'private' }
+{ #category : 'accessing' }
 ArchDocModel >> classesReferencedBy: aClass [
-	"Every class the code of aClass names, on both sides, answered by its instance side, since a
-	 reference to a metaclass and one to its class are the same fact for a diagram."
+	"The classes the methods of this package install on aClass name. A method another package
+	 installs on aClass is that package's reference, not this one's: the Diagram tab of
+	 ArchDoc-Roassal names a renderer, and ArchDocGraph does not thereby depend on it."
 
 	| reached |
 	reached := Set new.
-	(aClass methods , aClass class methods) do: [ :method |
+	((aClass methods , aClass class methods) select: [ :each | self owns: each ]) do: [ :method |
 		method referencedClasses do: [ :each | reached add: each instanceSide ] ].
 	^ reached
 ]
@@ -160,6 +162,11 @@ ArchDocModel >> nodes [
 	self declaredEdges do: [ :each | found add: each target ].
 	self inferredUses do: [ :each | found add: each target ].
 	^ found asArray
+]
+
+{ #category : 'private' }
+ArchDocModel >> owns: aCompiledMethod [
+	^ aCompiledMethod package = package
 ]
 
 { #category : 'accessing' }
