@@ -30,6 +30,13 @@ ArchDocGraphRenderer class >> on: anArchDocGraph [
 	^ self new setGraph: anArchDocGraph
 ]
 
+{ #category : 'instance creation' }
+ArchDocGraphRenderer class >> onPackageNamed: aString [
+	"The reader of a package holds its name and nothing else, so read the model from here."
+
+	^ self on: (ArchDocModel onPackageNamed: aString) graph
+]
+
 { #category : 'private' }
 ArchDocGraphRenderer >> addLineFor: anEdge [
 	"A line whose style says which kind of arrow it is: a declared holding solid, a cache dashed
@@ -92,6 +99,15 @@ ArchDocGraphRenderer >> colorFor: anEdge [
 	anEdge isUse ifTrue: [ ^ Color gray alpha: 0.3 ].
 	anEdge isCache ifTrue: [ ^ Color blue alpha: 0.8 ].
 	^ Color black
+]
+
+{ #category : 'accessing' }
+ArchDocGraphRenderer >> graph [
+	"The graph I draw. A reader who built me from a package name asks me for it rather than
+	 reading the model a second time."
+
+	<archRelation: #one to: #ArchDocGraph>
+	^ graph
 ]
 
 { #category : 'inspector' }

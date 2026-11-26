@@ -27,6 +27,17 @@ ArchDocGraphRendererTest >> testACacheIsDashedAndAnInferredUseIsFainterThanAHold
 ]
 
 { #category : 'tests' }
+ArchDocGraphRendererTest >> testARendererIsBuiltFromAPackageNameAlone [
+	"A reader of a package has a name and nothing else, so the renderer takes one and reads the
+	 model itself."
+
+	| renderer |
+	renderer := ArchDocGraphRenderer onPackageNamed: 'ArchDoc-Examples'.
+	self assert: renderer graph title equals: 'ArchDoc-Examples'.
+	self assert: renderer canvas nodes notEmpty
+]
+
+{ #category : 'tests' }
 ArchDocGraphRendererTest >> testTheCanvasHoldsOneShapePerNodeAndOneLinePerEdge [
 	| graph canvas |
 	graph := self exampleGraph.
