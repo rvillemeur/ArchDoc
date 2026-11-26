@@ -13,7 +13,8 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'partner',
-		'neighbour'
+		'neighbour',
+		'neighbours'
 	],
 	#classInstVars : [
 		'keptSubject'
@@ -40,6 +41,18 @@ ArchDocBrokenSubject class >> buildWrongKeptSubject [
 ]
 
 { #category : 'breaking the rules' }
+ArchDocBrokenSubject class >> raisesOnPurpose [
+	"An example that cannot run: a font file the image does not have, a device that is not
+	 there. A reader of a package meets these, so the checker has to report one and carry on.
+	 The second pragma says this one is a fixture, which is what keeps the artefact gate of this
+	 project from reading it as a real example of mine."
+
+	<sampleInstance>
+	<archDocDeliberatelyBroken>
+	^ self error: 'this example cannot run in this image'
+]
+
+{ #category : 'breaking the rules' }
 ArchDocBrokenSubject class >> resetKeptSubject [
 	"Forget the wrong cache, so the package is quiet again for every other reader."
 
@@ -50,7 +63,8 @@ ArchDocBrokenSubject class >> resetKeptSubject [
 ArchDocBrokenSubject >> initialize [
 	super initialize.
 	partner := ArchDocDeclaredSubject new.
-	neighbour := self wrongKindOfNeighbour
+	neighbour := self wrongKindOfNeighbour.
+	neighbours := Array with: ArchDocDeclaredSubject new with: nil
 ]
 
 { #category : 'accessing' }
@@ -59,6 +73,15 @@ ArchDocBrokenSubject >> neighbour [
 
 	<archRelation: #one to: #ArchDocDeclaredSubject>
 	^ neighbour
+]
+
+{ #category : 'accessing' }
+ArchDocBrokenSubject >> neighbours [
+	"A structural holding of many with a nil among its elements, which is the finding: nothing
+	 asked a question here, so nothing is remembering that the answer was nothing."
+
+	<archRelation: #many to: #ArchDocDeclaredSubject>
+	^ neighbours
 ]
 
 { #category : 'accessing' }

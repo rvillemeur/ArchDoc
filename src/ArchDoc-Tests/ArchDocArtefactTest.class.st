@@ -24,6 +24,15 @@ ArchDocArtefactTest >> documentedClasses [
 ]
 
 { #category : 'accessing' }
+ArchDocArtefactTest >> isRunnableExample: aCompiledMethod [
+	| selectors |
+	selectors := aCompiledMethod pragmas collect: [ :each | each selector ].
+	^ (selectors includes: #sampleInstance)
+		and: [ (selectors includes: #archDocDeliberatelyBroken) not
+		and: [ (ArchDocChecker opensAWindow: aCompiledMethod selector) not ] ]
+]
+
+{ #category : 'accessing' }
 ArchDocArtefactTest >> presenterOf: aSelector on: anObject [
 	"Build one view the way the inspector builds it, through a context that carries the builder."
 
@@ -38,16 +47,16 @@ ArchDocArtefactTest >> presenterOf: aSelector on: anObject [
 { #category : 'accessing' }
 ArchDocArtefactTest >> sampleInstances [
 	"Every object the class-side <sampleInstance> examples of ArchDoc-Examples answer, run now,
-	 so that an example which no longer runs fails here rather than under a reader's click. An
-	 example named open… is left out: a suite may not open windows."
+	 so that an example which no longer runs fails here rather than under a reader's click. Two
+	 are left out: one named open…, because a suite may not open windows, and one marked
+	 <archDocDeliberatelyBroken>, which is the fixture the checker's own test reads."
 
 	| found |
 	found := OrderedCollection new.
 	(Smalltalk packageOrganizer packageNamed: 'ArchDoc-Examples') definedClasses do: [ :each |
 		each class methods do: [ :method |
-			((method pragmas anySatisfy: [ :pragma | pragma selector = #sampleInstance ])
-				and: [ (ArchDocChecker opensAWindow: method selector) not ])
-					ifTrue: [ found add: (each perform: method selector) ] ] ].
+			(self isRunnableExample: method)
+				ifTrue: [ found add: (each perform: method selector) ] ] ].
 	^ found asArray
 ]
 

@@ -36,3 +36,19 @@ ArchDocCheckerExamples class >> subjectThatBreaksItsDeclarations [
 	<sampleInstance>
 	^ ArchDocBrokenSubject new
 ]
+
+{ #category : 'examples' }
+ArchDocCheckerExamples class >> subjectThatKeepsItsDeclarations [
+	"The honest object beside the broken one: a child, one in the collection, and a cache of
+	 answers that holds a remembered nothing for the even question. The checker must find
+	 nothing to say about it."
+
+	<sampleInstance>
+	| subject |
+	subject := ArchDocDeclaredSubject new.
+	subject child: ArchDocDeclaredSubject new.
+	subject children add: ArchDocDeclaredSubject new.
+	subject answerFor: 1.
+	subject answerFor: 2.
+	^ subject
+]

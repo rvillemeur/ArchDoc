@@ -11,6 +11,19 @@ ArchDocCheckerTest >> checkerOnTheExamples [
 ]
 
 { #category : 'tests' }
+ArchDocCheckerTest >> testACacheOfManyMayRememberThatThereIsNothingToHold [
+	"A cache keyed by a question remembers the answer nothing as well: the glyph atlas keeps nil
+	 for a space, so it is looked at once and never again. So a nil inside a cache of many is no
+	 violation, while a nil inside a structural holding of many is."
+
+	| explanations |
+	explanations := (ArchDocChecker onPackageNamed: 'ArchDoc-Examples')
+		sampleInstanceViolations collect: [ :each | each explanation ].
+	self deny: (explanations anySatisfy: [ :each | each includesSubstring: 'answers' ]).
+	self assert: (explanations anySatisfy: [ :each | each includesSubstring: 'neighbours' ])
+]
+
+{ #category : 'tests' }
 ArchDocCheckerTest >> testAClassSideCacheHoldingTheWrongKindIsReported [
 	"What a class keeps for the session is read from the class object itself. An unbuilt cache is
 	 absent and no violation; a built one holding the wrong kind of object is one."
@@ -61,6 +74,20 @@ ArchDocCheckerTest >> testASampleInstanceContradictingItsDeclarationIsReported [
 	self assert: (findings allSatisfy: [ :each | each kind = #sampleViolation ]).
 	self deny: (findings anySatisfy: [ :each | each subject role = #warmCache ]).
 	self deny: (findings anySatisfy: [ :each | each subject role = #child ])
+]
+
+{ #category : 'tests' }
+ArchDocCheckerTest >> testAnExampleThatRaisesIsReportedAndStopsNothing [
+	"Reading a package must not depend on every example of it running. An example that raises is
+	 a finding of its own, with the error in it, and the other examples are still read."
+
+	| checker kinds |
+	checker := ArchDocChecker onPackageNamed: 'ArchDoc-Examples'.
+	kinds := (checker findings collect: [ :each | each kind ]) asSet.
+	self assert: (kinds includes: #brokenExample).
+	self assert: ((checker brokenExamples collect: [ :each | each explanation ])
+		anySatisfy: [ :each | each includesSubstring: 'raisesOnPurpose' ]).
+	self assert: (kinds includes: #sampleViolation)
 ]
 
 { #category : 'tests' }

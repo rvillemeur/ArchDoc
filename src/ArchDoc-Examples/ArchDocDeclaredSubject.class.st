@@ -19,7 +19,8 @@ Class {
 		'warmCache',
 		'scratch',
 		'ghost',
-		'warmCacheWithOpposite'
+		'warmCacheWithOpposite',
+		'answers'
 	],
 	#classInstVars : [
 		'defaultSubject'
@@ -50,6 +51,26 @@ ArchDocDeclaredSubject class >> resetDefault [
 	 an empty cache."
 
 	defaultSubject := nil
+]
+
+{ #category : 'accessing' }
+ArchDocDeclaredSubject >> answerFor: aKey [
+	"Fill the cache for one question. Odd keys answer a subject, even keys answer nothing, which
+	 is the shape of a glyph atlas: a space inks nothing, and the nil is remembered so the space
+	 is looked at once and never again."
+
+	^ self answers
+		at: aKey
+		ifAbsentPut: [ aKey odd ifTrue: [ self class new ] ifFalse: [ nil ] ]
+]
+
+{ #category : 'accessing' }
+ArchDocDeclaredSubject >> answers [
+	"The answers already worked out, by the question that was asked. A cache of many, so a
+	 remembered nothing is one of the answers and not a fault."
+
+	<archCache: #many to: #ArchDocDeclaredSubject>
+	^ answers ifNil: [ answers := Dictionary new ]
 ]
 
 { #category : 'accessing' }

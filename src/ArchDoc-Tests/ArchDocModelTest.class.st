@@ -57,7 +57,7 @@ ArchDocModelTest >> testModelOfAPackageCollectsEveryDeclaredRelationAndNothingEl
 	roles := ((model relations select: [ :each | each declaringClass = ArchDocDeclaredSubject ])
 		collect: [ :each | each role ]) asSortedCollection asArray.
 	self assert: roles
-		equals: #( #child #children #ghost #warmCache #warmCacheWithOpposite ).
+		equals: #( #answers #child #children #ghost #warmCache #warmCacheWithOpposite ).
 	self deny: (roles includes: #scratch)
 ]
 

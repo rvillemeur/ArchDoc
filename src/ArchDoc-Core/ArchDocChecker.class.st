@@ -23,7 +23,8 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'model',
-		'samplePackageName'
+		'samplePackageName',
+		'exampleRun'
 	],
 	#category : 'ArchDoc-Core-Checking',
 	#package : 'ArchDoc-Core',
@@ -49,6 +50,15 @@ ArchDocChecker class >> opensAWindow: aSelector [
 ]
 
 { #category : 'checking' }
+ArchDocChecker >> brokenExamples [
+	"The examples of the samples package that raised when they were run. An example is the only
+	 way this library reaches a live object, so one that cannot run is a hole in the reading, and
+	 it is said out loud rather than swallowed."
+
+	^ self exampleRun value asArray
+]
+
+{ #category : 'checking' }
 ArchDocChecker >> classSideViolations [
 	"What the classes of my package hold themselves, against what their archClassRelations
 	 declare. No sample is needed: the class object is there to be read, and reading a slot
@@ -61,6 +71,13 @@ ArchDocChecker >> classSideViolations [
 			(self violationOf: relation in: each)
 				ifNotNil: [ :finding | found add: finding ] ] ].
 	^ found asArray
+]
+
+{ #category : 'private' }
+ArchDocChecker >> exampleRun [
+	"The one run of the examples, kept, so that reading a package runs each example once."
+
+	^ exampleRun ifNil: [ exampleRun := self runExamplesCollectingFailures ]
 ]
 
 { #category : 'private' }
@@ -77,11 +94,11 @@ ArchDocChecker >> finding: aRelation in: anObject saying: aString [
 ArchDocChecker >> findings [
 	"Everything I can say about the package, in one collection: declarations naming a class the
 	 image does not answer, declarations with no reciprocal on the other side, live objects that
-	 contradict their class's declarations, classes that contradict their own, and edges reaching
-	 a package the manifest forbids."
+	 contradict their class's declarations, classes that contradict their own, edges reaching a
+	 package the manifest forbids, and examples that cannot run."
 
 	^ self unresolvedRelations , self missingOpposites , self sampleInstanceViolations
-		, self classSideViolations , self forbiddenDependencies
+		, self classSideViolations , self forbiddenDependencies , self brokenExamples
 ]
 
 { #category : 'checking' }
@@ -175,14 +192,21 @@ ArchDocChecker >> isReciprocal: aRelation [
 
 { #category : 'private' }
 ArchDocChecker >> manyViolationOf: aRelation holding: aValue in: anObject [
-	"An empty collection is no violation: a holding of many may legitimately hold none yet."
+	"An empty collection is no violation: a holding of many may legitimately hold none yet.
+	 A nil among the elements is no violation in a cache either: a cache keyed by a question
+	 remembers the answer nothing as well, which is how a glyph atlas keeps a space. In a
+	 structural holding a nil is a fault, because nothing asked a question there."
 
+	| elements |
 	aValue isCollection ifFalse: [
 		^ self
 			finding: aRelation
 			in: anObject
 			saying: 'holds a ' , aValue class name , ', which is no collection' ].
-	^ (aValue allSatisfy: [ :each | each isKindOf: aRelation targetClass ])
+	elements := aRelation isCache
+		ifTrue: [ aValue reject: [ :each | each isNil ] ]
+		ifFalse: [ aValue ].
+	^ (elements allSatisfy: [ :each | each isKindOf: aRelation targetClass ])
 		ifTrue: [ nil ]
 		ifFalse: [
 			self finding: aRelation in: anObject saying: 'holds objects of another kind' ]
@@ -223,6 +247,30 @@ ArchDocChecker >> packageNameOf: aClass [
 		ifNotNil: [ :each | each name asString ]
 ]
 
+{ #category : 'private' }
+ArchDocChecker >> runExamplesCollectingFailures [
+	"Run every batch example of the samples package once, and answer the objects it answered
+	 along with the failures it raised, as objects -> failures. One run serves both answers, so
+	 an example is never run twice in a reading."
+
+	| answered failures |
+	answered := OrderedCollection new.
+	failures := OrderedCollection new.
+	self samplePackage definedClasses do: [ :each |
+		each class methods do: [ :method |
+			(self isBatchExample: method) ifTrue: [
+				[ answered add: (each perform: method selector) ]
+					on: Error
+					do: [ :error |
+						failures add: (ArchDocFinding
+							kind: #brokenExample
+							subject: method
+							explanation: each name , '>>' , method selector
+								, ' cannot run: ' , error class name , ', '
+								, error messageText asString) ] ] ] ].
+	^ answered -> failures
+]
+
 { #category : 'checking' }
 ArchDocChecker >> sampleInstanceViolations [
 	"What the live objects say against what their classes declare. A cache nobody has built yet
@@ -240,20 +288,14 @@ ArchDocChecker >> sampleInstanceViolations [
 
 { #category : 'accessing' }
 ArchDocChecker >> sampleInstances [
-	"Every object the examples answer whose class my model's package defines. Running an example
-	 is how this library reads a live object: there is no other registry of instances. An example
-	 named open… is skipped, since it opens a window."
+	"Every object the examples answered whose class my model's package defines. Running an
+	 example is how this library reads a live object: there is no other registry of instances.
+	 An example named open… is skipped, since it opens a window, and one that raises is a
+	 finding of brokenExamples rather than an error here."
 
-	| classes found |
+	| classes |
 	classes := model package definedClasses.
-	found := OrderedCollection new.
-	self samplePackage definedClasses do: [ :each |
-		each class methods do: [ :method |
-			(self isBatchExample: method) ifTrue: [
-				| answered |
-				answered := each perform: method selector.
-				(classes includes: answered class) ifTrue: [ found add: answered ] ] ] ].
-	^ found asArray
+	^ (self exampleRun key select: [ :each | classes includes: each class ]) asArray
 ]
 
 { #category : 'private' }
