@@ -20,10 +20,36 @@ Class {
 		'scratch',
 		'ghost'
 	],
+	#classInstVars : [
+		'defaultSubject'
+	],
 	#category : 'ArchDoc-Examples-Subjects',
 	#package : 'ArchDoc-Examples',
 	#tag : 'Subjects'
 }
+
+{ #category : 'architecture' }
+ArchDocDeclaredSubject class >> archClassRelations [
+	"What I hold myself, rather than what my instances hold. One row, the cache a session keeps,
+	 shaped exactly like a row of archRelations."
+
+	^ #( #( #defaultSubject #cacheOne #ArchDocDeclaredSubject nil ) )
+]
+
+{ #category : 'accessing' }
+ArchDocDeclaredSubject class >> default [
+	"The kept subject, built on first use, the shape of every session-long cache."
+
+	^ defaultSubject ifNil: [ defaultSubject := self new ]
+]
+
+{ #category : 'initialization' }
+ArchDocDeclaredSubject class >> resetDefault [
+	"Forget the kept subject, so a test can hold that it is built once and a reader starts from
+	 an empty cache."
+
+	defaultSubject := nil
+]
 
 { #category : 'accessing' }
 ArchDocDeclaredSubject >> child [

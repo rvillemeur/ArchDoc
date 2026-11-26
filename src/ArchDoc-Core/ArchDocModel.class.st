@@ -68,12 +68,14 @@ ArchDocModel >> collectInferredUses [
 
 { #category : 'private' }
 ArchDocModel >> collectRelations [
-	"Asked of each class of mine, since a relation is declared by a class and not by a package."
+	"Both sides of every class of my package: what its instances hold, and what the class object
+	 itself holds for the session."
 
 	| found |
 	found := OrderedCollection new.
 	package definedClasses do: [ :each |
-		found addAll: (ArchDocRelation declaredBy: each) ].
+		found addAll: (ArchDocRelation declaredBy: each).
+		found addAll: (ArchDocRelation declaredBy: each class) ].
 	^ found asArray
 ]
 

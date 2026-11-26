@@ -11,6 +11,21 @@ Class {
 }
 
 { #category : 'tests' }
+ArchDocRelationTest >> testAClassSideTableDeclaresWhatTheClassItselfHolds [
+	"A cache kept for the session lives in a class-side instance variable, so its holder is the
+	 class and not an instance. archClassRelations declares those, and the relation says the
+	 metaclass declares it, which is how a reader knows where to look for the slot."
+
+	| relation |
+	relation := (ArchDocRelation declaredBy: ArchDocDeclaredSubject class)
+		detect: [ :each | each role = #defaultSubject ].
+	self assert: relation declaringClass equals: ArchDocDeclaredSubject class.
+	self assert: relation targetName equals: #ArchDocDeclaredSubject.
+	self assert: relation isCache.
+	self deny: relation isToMany
+]
+
+{ #category : 'tests' }
 ArchDocRelationTest >> testCacheIsDeclaredByItsOwnPragmaAndIsNotStructural [
 	| relation |
 	relation := ArchDocRelation fromMethod: ArchDocDeclaredSubject >> #warmCache.

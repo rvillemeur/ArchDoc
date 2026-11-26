@@ -34,6 +34,19 @@ ArchDocObjectGraphTest >> testACycleIsOneNodePerObjectAndTerminates [
 ]
 
 { #category : 'tests' }
+ArchDocObjectGraphTest >> testAWalkFromAClassReadsWhatTheClassItselfKeeps [
+	"The root may be a class, and then the walk reads the class-side declarations: a session
+	 cache is the one holding a reader most wants to see, because it is shared by everything."
+
+	| graph |
+	ArchDocDeclaredSubject default.
+	graph := [ (ArchDocObjectGraph of: ArchDocDeclaredSubject) graph ]
+		ensure: [ ArchDocDeclaredSubject resetDefault ].
+	self assert: ((graph edges collect: [ :each | each label ]) includes: 'defaultSubject').
+	self assert: (graph nodes includes: ArchDocDeclaredSubject)
+]
+
+{ #category : 'tests' }
 ArchDocObjectGraphTest >> testAnObjectThatHidesWhatItHoldsIsStillWalked [
 	"ArchDocHiddenSubject exposes no accessor for the two subjects it holds, as VGFontFace does.
 	 The walk reads its slots, so the graph shows them anyway, and its unbuilt cache does not

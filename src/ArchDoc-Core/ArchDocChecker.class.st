@@ -48,6 +48,21 @@ ArchDocChecker class >> opensAWindow: aSelector [
 	^ aSelector beginsWith: 'open'
 ]
 
+{ #category : 'checking' }
+ArchDocChecker >> classSideViolations [
+	"What the classes of my package hold themselves, against what their archClassRelations
+	 declare. No sample is needed: the class object is there to be read, and reading a slot
+	 builds nothing, so an unbuilt session cache reads as absent and is no violation."
+
+	| found |
+	found := OrderedCollection new.
+	model package definedClasses do: [ :each |
+		(ArchDocRelation declaredBy: each class) do: [ :relation |
+			(self violationOf: relation in: each)
+				ifNotNil: [ :finding | found add: finding ] ] ].
+	^ found asArray
+]
+
 { #category : 'private' }
 ArchDocChecker >> finding: aRelation in: anObject saying: aString [
 	^ ArchDocFinding
@@ -60,11 +75,13 @@ ArchDocChecker >> finding: aRelation in: anObject saying: aString [
 
 { #category : 'checking' }
 ArchDocChecker >> findings [
-	"The four answers together, which is what an architecture test asserts is empty and what the
-	 inspector shows."
+	"Everything I can say about the package, in one collection: declarations naming a class the
+	 image does not answer, declarations with no reciprocal on the other side, live objects that
+	 contradict their class's declarations, classes that contradict their own, and edges reaching
+	 a package the manifest forbids."
 
 	^ self unresolvedRelations , self missingOpposites , self sampleInstanceViolations
-		, self forbiddenDependencies
+		, self classSideViolations , self forbiddenDependencies
 ]
 
 { #category : 'checking' }

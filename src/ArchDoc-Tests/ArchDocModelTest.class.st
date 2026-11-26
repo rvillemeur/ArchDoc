@@ -85,3 +85,15 @@ ArchDocModelTest >> testTheExampleGraphCarriesTheThreeKindsOfArrow [
 	self deny: (graph edgesOfKind: #use) isEmpty.
 	self assert: ArchDocModelExamples cacheEdge isCache
 ]
+
+{ #category : 'tests' }
+ArchDocModelTest >> testThePackageReadsWhatItsClassesThemselvesHold [
+	"A cache a class keeps for the whole session is part of the architecture, so the model must
+	 read archClassRelations as well as the instance-side declarations."
+
+	| model relation |
+	model := ArchDocModel onPackageNamed: 'ArchDoc-Examples'.
+	relation := model relations detect: [ :each | each role = #defaultSubject ].
+	self assert: relation declaringClass equals: ArchDocDeclaredSubject class.
+	self assert: relation isCache
+]

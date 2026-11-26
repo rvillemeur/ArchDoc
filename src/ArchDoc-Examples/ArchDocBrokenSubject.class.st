@@ -15,10 +15,36 @@ Class {
 		'partner',
 		'neighbour'
 	],
+	#classInstVars : [
+		'keptSubject'
+	],
 	#category : 'ArchDoc-Examples-Subjects',
 	#package : 'ArchDoc-Examples',
 	#tag : 'Subjects'
 }
+
+{ #category : 'architecture' }
+ArchDocBrokenSubject class >> archClassRelations [
+	"I declare that I keep one ArchDocDeclaredSubject for the session. I do not: buildWrongKeptSubject
+	 fills the slot with a string, which is how the checker's class-side answer is shown to work."
+
+	^ #( #( #keptSubject #cacheOne #ArchDocDeclaredSubject nil ) )
+]
+
+{ #category : 'breaking the rules' }
+ArchDocBrokenSubject class >> buildWrongKeptSubject [
+	"Fill the session cache with the wrong kind of object, so a reader can see the finding the
+	 checker answers. A test undoes this with resetKeptSubject."
+
+	keptSubject := 'not a subject at all'
+]
+
+{ #category : 'breaking the rules' }
+ArchDocBrokenSubject class >> resetKeptSubject [
+	"Forget the wrong cache, so the package is quiet again for every other reader."
+
+	keptSubject := nil
+]
 
 { #category : 'initialization' }
 ArchDocBrokenSubject >> initialize [

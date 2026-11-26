@@ -11,6 +11,21 @@ ArchDocCheckerTest >> checkerOnTheExamples [
 ]
 
 { #category : 'tests' }
+ArchDocCheckerTest >> testAClassSideCacheHoldingTheWrongKindIsReported [
+	"What a class keeps for the session is read from the class object itself. An unbuilt cache is
+	 absent and no violation; a built one holding the wrong kind of object is one."
+
+	| explanations |
+	ArchDocBrokenSubject buildWrongKeptSubject.
+	explanations := [
+		(ArchDocChecker onPackageNamed: 'ArchDoc-Examples') classSideViolations
+			collect: [ :each | each explanation ] ]
+		ensure: [ ArchDocBrokenSubject resetKeptSubject ].
+	self assert: explanations size equals: 1.
+	self assert: (explanations first includesSubstring: 'keptSubject')
+]
+
+{ #category : 'tests' }
 ArchDocCheckerTest >> testADeclarationNamingAnUnloadedClassIsReported [
 	"ArchDocDeclaredSubject declares a ghost on purpose: nothing of that name is loaded, and a
 	 declaration pointing at nothing is the first thing a reader must be told."

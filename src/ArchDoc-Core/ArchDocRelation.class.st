@@ -33,6 +33,17 @@ Class {
 	#tag : 'Declarations'
 }
 
+{ #category : 'instance creation' }
+ArchDocRelation class >> classTableDeclarationsOf: aClass [
+	"The rows of archClassRelations, which declare what the class object itself holds: a cache
+	 kept for a session lives in a class-side instance variable, and its holder is the class.
+	 The declaring class is the metaclass, which is where that slot is."
+
+	(aClass class canUnderstand: #archClassRelations) ifFalse: [ ^ #() ].
+	^ aClass archClassRelations
+		collect: [ :row | self fromTableRow: row declaredIn: aClass class ]
+]
+
 { #category : 'declarations' }
 ArchDocRelation class >> declarationSelectors [
 	"The pragmas that declare a relation. A method carrying none of them declares nothing."
@@ -42,16 +53,14 @@ ArchDocRelation class >> declarationSelectors [
 
 { #category : 'instance creation' }
 ArchDocRelation class >> declaredBy: aClass [
-	"Every relation aClass declares, by a pragma on either side or by its class-side table.
+	"Every relation aClass declares, by a pragma on either side or by one of its two tables.
 	 Asked of one class, so that a reader of a relation can ask its target what it declares back
-	 without a model of the target's package."
+	 without a model of the target's package.
+	 Asked of a metaclass, answer the class-side table alone: the holder there is the class
+	 object itself, and its instances hold nothing of the sort."
 
-	| found |
-	found := OrderedCollection new.
-	(aClass instanceSide methods , aClass instanceSide class methods) do: [ :method |
-		(self fromMethod: method) ifNotNil: [ :relation | found add: relation ] ].
-	found addAll: (self tableDeclarationsOf: aClass instanceSide).
-	^ found asArray
+	aClass isMeta ifTrue: [ ^ self classTableDeclarationsOf: aClass instanceSide ].
+	^ self instanceDeclarationsOf: aClass instanceSide
 ]
 
 { #category : 'instance creation' }
@@ -71,6 +80,19 @@ ArchDocRelation class >> fromTableRow: anArray declaredIn: aClass [
 	 role, the multiplicity, the target and the opposite; nil names no opposite."
 
 	^ self new readFromTableRow: anArray declaredIn: aClass
+]
+
+{ #category : 'instance creation' }
+ArchDocRelation class >> instanceDeclarationsOf: aClass [
+	"What instances of aClass hold: the accessor pragmas of both sides, and the rows of
+	 archRelations for what no accessor exposes."
+
+	| found |
+	found := OrderedCollection new.
+	(aClass methods , aClass class methods) do: [ :method |
+		(self fromMethod: method) ifNotNil: [ :relation | found add: relation ] ].
+	found addAll: (self tableDeclarationsOf: aClass).
+	^ found asArray
 ]
 
 { #category : 'instance creation' }
