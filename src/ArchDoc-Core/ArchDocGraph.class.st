@@ -24,6 +24,15 @@ ArchDocGraph class >> title: aString nodes: aCollection edges: anotherCollection
 	^ self new setTitle: aString nodes: aCollection edges: anotherCollection
 ]
 
+{ #category : 'describing' }
+ArchDocGraph >> describe: aNode [
+	"My nodes are classes in a package diagram and objects in an object graph."
+
+	^ aNode isClass
+		ifTrue: [ aNode name ]
+		ifFalse: [ aNode printString ]
+]
+
 { #category : 'accessing' }
 ArchDocGraph >> edges [
 	^ edges
@@ -49,9 +58,9 @@ ArchDocGraph >> inspectionEdges: aBuilder [
 	<inspectorPresentationOrder: 1 title: 'Edges'>
 	^ aBuilder newTable
 		items: (edges asSortedCollection: [ :a :b | a printString <= b printString ]) asArray;
-		addColumn: ((SpStringTableColumn title: 'From' evaluated: [ :each | each source name ]) width: 240);
+		addColumn: ((SpStringTableColumn title: 'From' evaluated: [ :each | each sourceDescription ]) width: 240);
 		addColumn: ((SpStringTableColumn title: 'Kind' evaluated: [ :each | each kind asString ]) width: 100);
-		addColumn: ((SpStringTableColumn title: 'To' evaluated: [ :each | each target name ]) width: 240);
+		addColumn: ((SpStringTableColumn title: 'To' evaluated: [ :each | each targetDescription ]) width: 240);
 		addColumn: (SpStringTableColumn title: 'Role' evaluated: [ :each | each label ]);
 		yourself
 ]
@@ -63,8 +72,8 @@ ArchDocGraph >> inspectionNodes: aBuilder [
 
 	<inspectorPresentationOrder: 2 title: 'Nodes'>
 	^ aBuilder newTable
-		items: (nodes asSortedCollection: [ :a :b | a name <= b name ]) asArray;
-		addColumn: ((SpStringTableColumn title: 'Class' evaluated: [ :each | each name ]) width: 280);
+		items: (nodes asSortedCollection: [ :a :b | (self describe: a) <= (self describe: b) ]) asArray;
+		addColumn: ((SpStringTableColumn title: 'Node' evaluated: [ :each | self describe: each ]) width: 280);
 		addColumn: ((SpStringTableColumn title: 'Holds' evaluated: [ :each |
 			((self edgesFrom: each) count: [ :edge | edge isUse not ]) asString ]) width: 80);
 		addColumn: (SpStringTableColumn title: 'Reaches' evaluated: [ :each |

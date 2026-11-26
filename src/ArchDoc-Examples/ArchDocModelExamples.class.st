@@ -37,3 +37,16 @@ ArchDocModelExamples class >> modelOfTheExamplesPackage [
 	<sampleInstance>
 	^ ArchDocModel onPackageNamed: 'ArchDoc-Examples'
 ]
+
+{ #category : 'examples' }
+ArchDocModelExamples class >> objectGraphOfASubjectHoldingTwoOthers [
+	"A live walk: a subject with one child and one in its collection, and a cache nobody has
+	 built, which the graph shows as absent."
+
+	<sampleInstance>
+	| subject |
+	subject := ArchDocDeclaredSubject new.
+	subject child: ArchDocDeclaredSubject new.
+	subject children add: ArchDocDeclaredSubject new.
+	^ ArchDocObjectGraph of: subject
+]

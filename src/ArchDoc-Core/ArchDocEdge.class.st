@@ -46,6 +46,16 @@ ArchDocEdge >> = anObject [
 		and: [ target = anObject target and: [ kind = anObject kind ] ] ]
 ]
 
+{ #category : 'describing' }
+ArchDocEdge >> describe: anObject [
+	"A node is a class in a package diagram and an object in an object graph, so a renderer and
+	 a table ask for a description rather than for a class name."
+
+	^ anObject isClass
+		ifTrue: [ anObject name ]
+		ifFalse: [ anObject printString ]
+]
+
 { #category : 'comparing' }
 ArchDocEdge >> hash [
 	^ (source hash bitXor: target hash) bitXor: kind hash
@@ -59,8 +69,8 @@ ArchDocEdge >> inspectionArrow: aBuilder [
 	<inspectorPresentationOrder: 1 title: 'Arrow'>
 	^ aBuilder newTable
 		items: {
-				'from' -> source name.
-				'to' -> target name.
+				'from' -> self sourceDescription.
+				'to' -> self targetDescription.
 				'kind' -> kind.
 				'role' -> (label isEmptyOrNil ifTrue: [ 'none: inferred from a reference' ] ifFalse: [ label ]) };
 		addColumn: ((SpStringTableColumn title: 'What' evaluated: [ :each | each key ]) width: 100);
@@ -95,11 +105,11 @@ ArchDocEdge >> label [
 { #category : 'printing' }
 ArchDocEdge >> printOn: aStream [
 	aStream
-		<< source name
+		<< self sourceDescription
 		<< ' -'
 		<< kind
 		<< '-> '
-		<< target name.
+		<< self targetDescription.
 	label isEmptyOrNil ifFalse: [ aStream << ' (' << label << ')' ]
 ]
 
@@ -116,7 +126,17 @@ ArchDocEdge >> source [
 	^ source
 ]
 
+{ #category : 'describing' }
+ArchDocEdge >> sourceDescription [
+	^ self describe: source
+]
+
 { #category : 'accessing' }
 ArchDocEdge >> target [
 	^ target
+]
+
+{ #category : 'describing' }
+ArchDocEdge >> targetDescription [
+	^ self describe: target
 ]
