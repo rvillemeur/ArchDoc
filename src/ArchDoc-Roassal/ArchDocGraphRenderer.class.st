@@ -170,22 +170,34 @@ ArchDocGraphRenderer >> inspectionDiagram: aBuilder [
 { #category : 'inspector' }
 ArchDocGraphRenderer >> inspectionLegend: aBuilder [
 	"What each style means, read from the renderer itself rather than restated, so this tab
-	 cannot drift from what the lines are drawn with."
+	 cannot drift from what the diagram is drawn with."
 
 	<inspectorPresentationOrder: 1 title: 'Legend'>
-	| rows |
-	rows := { #holding. #cache. #use } collect: [ :kind |
+	^ aBuilder newTable
+		items: self legendRows;
+		addColumn: ((SpStringTableColumn title: 'Means' evaluated: [ :each | each first ])
+			width: 120);
+		addColumn: ((SpStringTableColumn title: 'Drawn as' evaluated: [ :each | each second ])
+			width: 120);
+		addColumn: (SpStringTableColumn title: 'Colour' evaluated: [ :each | each third printString ]);
+		yourself
+]
+
+{ #category : 'accessing' }
+ArchDocGraphRenderer >> legendRows [
+	"What each style of the drawing means: name, what carries it, and the colour. The colours are
+	 asked of the renderer rather than restated, so the legend cannot drift from the picture."
+
+	| lineRows |
+	lineRows := #( #holding #cache #use ) collect: [ :kind |
 		| sample |
 		sample := ArchDocEdge from: Object to: Object kind: kind label: ''.
-		kind -> sample ].
-	^ aBuilder newTable
-		items: rows;
-		addColumn: ((SpStringTableColumn title: 'Kind' evaluated: [ :each | each key asString ]) width: 120);
-		addColumn: ((SpStringTableColumn title: 'Line' evaluated: [ :each |
-			each value isCache ifTrue: [ 'dashed' ] ifFalse: [ 'solid' ] ]) width: 100);
-		addColumn: (SpStringTableColumn title: 'Colour' evaluated: [ :each |
-			(self colorFor: each value) printString ]);
-		yourself
+		{ kind asString.
+		  sample isCache ifTrue: [ 'dashed line' ] ifFalse: [ 'solid line' ].
+		  self colorFor: sample } ].
+	^ lineRows , {
+		{ 'resident'. 'filled box'. self residentColor }.
+		{ 'visitor'. 'white box'. self visitorColor } }
 ]
 
 { #category : 'accessing' }

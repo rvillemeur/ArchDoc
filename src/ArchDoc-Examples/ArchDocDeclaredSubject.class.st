@@ -26,8 +26,9 @@ Class {
 	#classInstVars : [
 		'defaultSubject'
 	],
-	#category : 'ArchDoc-Examples',
-	#package : 'ArchDoc-Examples'
+	#category : 'ArchDoc-Examples-Subjects',
+	#package : 'ArchDoc-Examples',
+	#tag : 'Subjects'
 }
 
 { #category : 'architecture' }

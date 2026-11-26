@@ -114,3 +114,19 @@ ArchDocGraphRendererTest >> testTheExampleRendererDrawsTheExamplePackage [
 	self assert: (canvas lines collect: [ :each | each model kind ]) asSet
 		equals: #( #holding #cache #use ) asSet
 ]
+
+{ #category : 'tests' }
+ArchDocGraphRendererTest >> testTheLegendStatesTheBoxFillsAsWellAsTheLineStyles [
+	"The fill of a box now carries meaning — a class of the drawn package, or one a declaration
+	 reaches into another package for. A legend that names the lines alone leaves the reader to
+	 guess the boxes."
+
+	| renderer rows |
+	renderer := ArchDocGraphRenderer onPackageNamed: 'ArchDoc-Examples'.
+	rows := renderer legendRows.
+	self assert: (rows anySatisfy: [ :each |
+		each first = 'resident' and: [ each third = renderer residentColor ] ]).
+	self assert: (rows anySatisfy: [ :each |
+		each first = 'visitor' and: [ each third = renderer visitorColor ] ]).
+	self assert: (rows anySatisfy: [ :each | each first = 'holding' ])
+]
