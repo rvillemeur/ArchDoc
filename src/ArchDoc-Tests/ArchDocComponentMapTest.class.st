@@ -203,3 +203,17 @@ ArchDocComponentMapTest >> testTheMapDrawsItsPartsAsADiagram [
 		assert: (boxes collect: [ :each | each model ]) asArray
 		equals: map components asArray
 ]
+
+{ #category : 'tests - views' }
+ArchDocComponentMapTest >> testThePackagesViewNamesEachClaimedPackageAndHowManyClassesItHolds [
+	| map presenter rows |
+	map := ArchDocExampleMap new.
+	presenter := ArchDocArtefactTest new presenterOf: #inspectionPackages: on: map.
+	rows := presenter items collect: [ :each |
+		(presenter columns first evaluation value: each)
+			-> (presenter columns second evaluation value: each) ].
+	self assert: rows size equals: map packages size.
+	self
+		assert: rows first
+		equals: 'ArchDoc-Examples' -> map claimedClasses size printString
+]

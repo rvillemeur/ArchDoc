@@ -233,6 +233,24 @@ ArchDocComponentMap >> inspectionFindings: aBuilder [
 		yourself
 ]
 
+{ #category : 'inspector' }
+ArchDocComponentMap >> inspectionPackages: aBuilder [
+	"Which packages I claim, and how many classes of each I am answerable for. A count of zero is
+	 the first thing to know when a map reads empty: the package is there and holds nothing I
+	 could be asked about."
+
+	<inspectorPresentationOrder: 4 title: 'Packages'>
+	^ aBuilder newTable
+		items: self packages;
+		addColumn: ((SpStringTableColumn title: 'Package' evaluated: [ :each | each name ])
+			width: 300);
+		addColumn: (SpStringTableColumn
+			title: 'Classes claimed'
+			evaluated: [ :each |
+				(self claimedClasses count: [ :class | class package = each ]) printString ]);
+		yourself
+]
+
 { #category : 'accessing' }
 ArchDocComponentMap >> packages [
 	^ self class packageNames collect: [ :each |
