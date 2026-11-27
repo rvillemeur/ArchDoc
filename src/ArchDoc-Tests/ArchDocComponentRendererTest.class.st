@@ -35,6 +35,27 @@ ArchDocComponentRendererTest >> testEachBoxNamesThePartAndHowManyClassesItHolds 
 ]
 
 { #category : 'tests' }
+ArchDocComponentRendererTest >> testEveryBoxAnswersAClickByOpeningThePartItDraws [
+	"A reader who wants the inside of a part clicks its box. The diagram does not redraw itself
+	 one altitude down: the part is opened as an object, with its own tabs. The subscription is
+	 read rather than a click delivered, since delivering one opens a window."
+
+	| renderer |
+	renderer := ArchDocComponentRenderer onMap: ArchDocExampleMap new.
+	renderer graph nodes do: [ :each |
+		| shape actions |
+		shape := renderer shapeFor: each.
+		actions := (shape announcer subscriptions subscriptionsHandling: RSMouseClick new)
+			collect: [ :subscription | subscription action ].
+		self
+			assert: (actions anySatisfy: [ :action |
+				action isMessageSend
+					and: [ action receiver == renderer
+					and: [ action selector = #openNodeFrom: ] ] ])
+			description: each name , ' does not answer a click with its own part' ]
+]
+
+{ #category : 'tests' }
 ArchDocComponentRendererTest >> testEveryLineCarriesTheNumberOfClassEdgesItStandsFor [
 	"One arrow stands for several class edges, so the count is written beside it: an arrow
 	 carrying twelve edges and one carrying one are not the same fact."
@@ -62,6 +83,16 @@ ArchDocComponentRendererTest >> testTheBoxesLieLeftToRightInDeclarationOrder [
 		self
 			assert: each left > (boxes at: index) right
 			description: 'a part is drawn to the right of the one declared before it' ]
+]
+
+{ #category : 'tests' }
+ArchDocComponentRendererTest >> testTheObjectAClickOpensIsThePartTheBoxDraws [
+	| renderer node |
+	renderer := ArchDocComponentRenderer onMap: ArchDocExampleMap new.
+	node := renderer graph nodes second.
+	self
+		assert: (renderer nodeOf: (renderer shapeFor: node))
+		equals: node
 ]
 
 { #category : 'tests - views' }

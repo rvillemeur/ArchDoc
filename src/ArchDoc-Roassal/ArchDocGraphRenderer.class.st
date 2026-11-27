@@ -63,7 +63,7 @@ ArchDocGraphRenderer >> addLineFor: anEdge [
 	^ line
 ]
 
-{ #category : 'drawing' }
+{ #category : 'rendering' }
 ArchDocGraphRenderer >> addShapeFor: aNode [
 	"A label inside a box. The box is what gives the layout an extent to keep clear: a bare label
 	 states no size, so a force layout packs the nodes until the words lie on top of one another

@@ -90,6 +90,18 @@ ArchDocComponentRenderer >> addLineFor: anEdge [
 ]
 
 { #category : 'rendering' }
+ArchDocComponentRenderer >> addShapeFor: aNode [
+	"A box as the class diagram draws one, and a click that opens the part it draws: a reader
+	 asking what is inside a part wants the part itself, with its classes, its arrows and its
+	 own diagram, not the same picture redrawn one altitude down."
+
+	| shape |
+	shape := super addShapeFor: aNode.
+	shape when: RSMouseClick send: #openNodeFrom: to: self.
+	^ shape
+]
+
+{ #category : 'rendering' }
 ArchDocComponentRenderer >> backwardLineCount [
 	"How many backward lines the canvas already holds, which is how deep the next one goes."
 
@@ -176,6 +188,22 @@ ArchDocComponentRenderer >> labelPointFor: anEdge on: aLine [
 			+ (self shapeFor: anEdge target) position x) / 2 @ (deep - 8) ].
 	^ ((self shapeFor: anEdge source) position
 		+ (self shapeFor: anEdge target) position) / 2 - (0 @ 9)
+]
+
+{ #category : 'accessing' }
+ArchDocComponentRenderer >> nodeOf: aShape [
+	"The part a box draws. Read through me rather than reached for, so a click and a test ask the
+	 same question."
+
+	^ aShape model
+]
+
+{ #category : 'rendering' }
+ArchDocComponentRenderer >> openNodeFrom: anEvent [
+	"What a click on a box does: open the part. The event carries the shape clicked, and the
+	 shape carries the part."
+
+	^ (self nodeOf: anEvent shape) inspect
 ]
 
 { #category : 'rendering' }

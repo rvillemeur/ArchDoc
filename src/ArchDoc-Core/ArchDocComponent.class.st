@@ -43,6 +43,15 @@ ArchDocComponent >> = anObject [
 		and: [ name = anObject name and: [ declaringClass = anObject declaringClass ] ]
 ]
 
+{ #category : 'graphing' }
+ArchDocComponent >> classEdges [
+	"The class-level edges that run between my own classes: how I am built, which is what the map
+	 drops when it lifts the edges."
+
+	^ self map classEdges select: [ :each |
+		(self includes: each source) and: [ self includes: each target ] ]
+]
+
 { #category : 'accessing' }
 ArchDocComponent >> classNames [
 	^ classNames
@@ -60,6 +69,27 @@ ArchDocComponent >> classes [
 { #category : 'accessing' }
 ArchDocComponent >> declaringClass [
 	^ declaringClass
+]
+
+{ #category : 'graphing' }
+ArchDocComponent >> edges [
+	"The lifted arrows of my map that touch me, in either direction."
+
+	^ self map edges select: [ :each | each source = self or: [ each target = self ] ]
+]
+
+{ #category : 'graphing' }
+ArchDocComponent >> graph [
+	"My own classes and the edges between them: the altitude below the map, drawn the way a
+	 package is drawn."
+
+	| classes |
+	classes := self classes.
+	^ ArchDocGraph
+		title: name
+		nodes: classes
+		edges: self classEdges
+		home: classes
 ]
 
 { #category : 'comparing' }
@@ -87,9 +117,42 @@ ArchDocComponent >> inspectionClasses: aBuilder [
 		yourself
 ]
 
+{ #category : 'inspector' }
+ArchDocComponent >> inspectionRelations: aBuilder [
+	"The arrows that touch me, read from where I stand: which way each one runs, which other part
+	 it joins, its kind, and how many class edges it stands for."
+
+	<inspectorPresentationOrder: 2 title: 'Relations'>
+	^ aBuilder newTable
+		items: self edges;
+		addColumn: ((SpStringTableColumn
+			title: 'Way'
+			evaluated: [ :each | each source = self ifTrue: [ 'to' ] ifFalse: [ 'from' ] ])
+				width: 60);
+		addColumn: ((SpStringTableColumn
+			title: 'Part'
+			evaluated: [ :each |
+				(each source = self ifTrue: [ each target ] ifFalse: [ each source ]) name ])
+					width: 180);
+		addColumn: ((SpStringTableColumn title: 'Kind' evaluated: [ :each | each kind asString ])
+			width: 90);
+		addColumn: (SpStringTableColumn
+			title: 'Class edges'
+			evaluated: [ :each | each count printString ]);
+		yourself
+]
+
 { #category : 'accessing' }
 ArchDocComponent >> intention [
 	^ intention
+]
+
+{ #category : 'accessing' }
+ArchDocComponent >> map [
+	"The map I was read from. A reader who opened me from a diagram holds me and not it, so I
+	 answer the questions that need it myself."
+
+	^ declaringClass new
 ]
 
 { #category : 'accessing' }
