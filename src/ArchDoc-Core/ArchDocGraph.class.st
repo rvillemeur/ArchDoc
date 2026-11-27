@@ -111,6 +111,17 @@ ArchDocGraph >> inspectionNodes: aBuilder [
 		yourself
 ]
 
+{ #category : 'inspector' }
+ArchDocGraph >> inspectionWhereToStart: aBuilder [
+	"Which of my nodes to read first. The order and the table are ArchDocReadingOrder's, built
+	 through the same builder. It is offered here, on the graph, because a component, a map and a
+	 package each hold one and each offered the tab by building an order of its own: the graph
+	 answers it, and they delegate."
+
+	<inspectorPresentationOrder: 3 title: 'Where to start'>
+	^ (ArchDocReadingOrder on: self) inspectionWhereToStart: aBuilder
+]
+
 { #category : 'accessing' }
 ArchDocGraph >> nodes [
 	^ nodes
