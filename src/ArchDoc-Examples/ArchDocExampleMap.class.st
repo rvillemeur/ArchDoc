@@ -32,7 +32,8 @@ ArchDocExampleMap class >> components [
 			'the two classes that declare a holding of the subject' ) .
 		#( 'Examples'
 			#( #ArchDocModelExamples #ArchDocRelationExamples #ArchDocRendererExamples
-				#ArchDocComponentExamples #ArchDocBrokenSubject #ArchDocNoSuchClass )
+				#ArchDocComponentExamples #ArchDocReadingOrderExamples #ArchDocBrokenSubject
+				#ArchDocNoSuchClass )
 			'the runnable examples a reader clicks' ) }
 ]
 
