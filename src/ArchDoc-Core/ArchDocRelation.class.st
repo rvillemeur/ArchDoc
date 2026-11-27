@@ -113,6 +113,17 @@ ArchDocRelation >> declaringClass [
 	^ declaringClass
 ]
 
+{ #category : 'accessing' }
+ArchDocRelation >> edgeKind [
+	"Which kind of arrow I make: a cache is drawn dashed because a live object that has not built
+	 it yet contradicts nothing, and every other declaration is a holding. I answer it myself, so
+	 a builder of edges states the fact once by asking rather than by deciding."
+
+	^ self isCache
+		ifTrue: [ #cache ]
+		ifFalse: [ #holding ]
+]
+
 { #category : 'testing' }
 ArchDocRelation >> hasOpposite [
 	"Does my declaration name the role by which my target holds my holder back? The checker

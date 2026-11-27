@@ -39,6 +39,23 @@ ArchDocRelationTest >> testAClassSideTableDeclaresWhatTheClassItselfHolds [
 ]
 
 { #category : 'tests' }
+ArchDocRelationTest >> testADeclarationSaysWhichKindOfArrowItMakes [
+	"A declaration knows whether it is a cache; the kind of arrow it makes follows from that, so
+	 the declaration says it rather than every builder of edges asking and deciding again."
+
+	| declarations |
+	declarations := ArchDocRelation declaredBy: ArchDocDeclaredSubject.
+	self deny: declarations isEmpty.
+	self assert: (declarations anySatisfy: [ :each | each isCache ]).
+	self assert: (declarations anySatisfy: [ :each | each isCache not ]).
+	declarations do: [ :each |
+		self
+			assert: each edgeKind
+			equals: (each isCache ifTrue: [ #cache ] ifFalse: [ #holding ]).
+		self assert: (ArchDocEdge kinds includes: each edgeKind) ]
+]
+
+{ #category : 'tests' }
 ArchDocRelationTest >> testCacheIsDeclaredByItsOwnPragmaAndIsNotStructural [
 	| relation |
 	relation := ArchDocRelation fromMethod: ArchDocDeclaredSubject >> #warmCache.

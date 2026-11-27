@@ -52,14 +52,15 @@ ArchDocObjectGraph >> descriptionOf: aRelation [
 
 { #category : 'private' }
 ArchDocObjectGraph >> edgeFrom: anObject through: anAssociation [
-	"anAssociation is a relation and the object held under it."
+	"anAssociation is a relation and the object held under it. The relation says which kind of
+	 arrow it makes, the same answer the class-altitude model reads."
 
 	| relation |
 	relation := anAssociation key.
 	^ ArchDocEdge
 		from: anObject
 		to: anAssociation value
-		kind: (relation isCache ifTrue: [ #cache ] ifFalse: [ #holding ])
+		kind: relation edgeKind
 		label: relation role asString
 ]
 

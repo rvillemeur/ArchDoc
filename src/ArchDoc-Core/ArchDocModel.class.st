@@ -90,18 +90,18 @@ ArchDocModel >> collectRelations [
 	^ found asArray
 ]
 
-{ #category : 'private' }
+{ #category : 'accessing' }
 ArchDocModel >> declaredEdges [
 	"One edge per declaration whose target this image holds, computed once because the graph and
 	 its node set both ask. A declaration pointing at an unloaded class draws nothing; the
-	 checker is what reports it."
+	 checker is what reports it. The declaration says which kind of arrow it makes."
 
 	^ declaredEdges ifNil: [
 		declaredEdges := (self relations select: [ :each | each isTargetLoaded ]) collect: [ :each |
 			ArchDocEdge
 				from: each declaringClass instanceSide
 				to: each targetClass instanceSide
-				kind: (each isCache ifTrue: [ #cache ] ifFalse: [ #holding ])
+				kind: each edgeKind
 				label: each role asString ] ]
 ]
 
