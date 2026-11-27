@@ -67,6 +67,17 @@ ArchDocComponentMap >> ambiguousClasses [
 		select: [ :each | (counted occurrencesOf: each) > 1 ]) asArray
 ]
 
+{ #category : 'checking' }
+ArchDocComponentMap >> ambiguousFindings [
+	^ self ambiguousClasses collect: [ :each |
+		ArchDocFinding
+			kind: #ambiguousClass
+			subject: each
+			explanation: each name , ' is named by '
+				, (', ' join: ((self componentsNaming: each) collect: [ :one | one name ]))
+				, ', so there is no one answer to which part it belongs to' ]
+]
+
 { #category : 'accessing' }
 ArchDocComponentMap >> claimedClasses [
 	"Every class the claimed packages define, bar the ones that describe the package rather than
@@ -100,6 +111,11 @@ ArchDocComponentMap >> components [
 		ArchDocComponent fromTableRow: each declaredIn: self class ]
 ]
 
+{ #category : 'accessing' }
+ArchDocComponentMap >> componentsNaming: aClass [
+	^ self components select: [ :each | each includes: aClass ]
+]
+
 { #category : 'checking' }
 ArchDocComponentMap >> coverageRows [
 	| claimed unmapped |
@@ -122,6 +138,15 @@ ArchDocComponentMap >> describesRatherThanBelongs: aClass [
 
 	^ (aClass inheritsFrom: PackageManifest)
 		or: [ aClass class canUnderstand: #components ]
+]
+
+{ #category : 'checking' }
+ArchDocComponentMap >> findings [
+	"Everything I can say against myself: a claimed class no component names, a class two
+	 components name, and a component naming a class this image does not hold. An empty answer is
+	 what a project wants."
+
+	^ self unmappedFindings , self ambiguousFindings , self unknownFindings
 ]
 
 { #category : 'inspector' }
@@ -151,6 +176,19 @@ ArchDocComponentMap >> inspectionCoverage: aBuilder [
 		yourself
 ]
 
+{ #category : 'inspector' }
+ArchDocComponentMap >> inspectionFindings: aBuilder [
+	"What the map says against itself, each row a sentence a reader can act on. An empty table is
+	 the answer a project wants."
+
+	<inspectorPresentationOrder: 3 title: 'Findings'>
+	^ aBuilder newTable
+		items: self findings;
+		addColumn: ((SpStringTableColumn title: 'Kind' evaluated: [ :each | each kind asString ]) width: 190);
+		addColumn: (SpStringTableColumn title: 'Says' evaluated: [ :each | each explanation ]);
+		yourself
+]
+
 { #category : 'accessing' }
 ArchDocComponentMap >> packages [
 	^ self class packageNames collect: [ :each |
@@ -172,9 +210,31 @@ ArchDocComponentMap >> unknownClassNames [
 ]
 
 { #category : 'checking' }
+ArchDocComponentMap >> unknownFindings [
+	^ self components flatCollect: [ :component |
+		component unknownClassNames collect: [ :each |
+			ArchDocFinding
+				kind: #unknownComponentClass
+				subject: component
+				explanation: component name , ' names ' , each asString
+					, ', which this image does not hold: either the name is misspelt, or the package'
+					, ' that defines it is not loaded' ] ]
+]
+
+{ #category : 'checking' }
 ArchDocComponentMap >> unmappedClasses [
 	"A claimed class no component names. Coverage is total, so this is a finding: a class added to
 	 the route stays unmapped until someone says which part it belongs to."
 
 	^ self claimedClasses reject: [ :each | (self componentOf: each) notNil ]
+]
+
+{ #category : 'checking' }
+ArchDocComponentMap >> unmappedFindings [
+	^ self unmappedClasses collect: [ :each |
+		ArchDocFinding
+			kind: #unmappedClass
+			subject: each
+			explanation: each name , ' is defined by ' , each package name
+				, ', which this map claims, and no component names it' ]
 ]

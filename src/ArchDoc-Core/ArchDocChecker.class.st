@@ -73,6 +73,31 @@ ArchDocChecker >> classSideViolations [
 	^ found asArray
 ]
 
+{ #category : 'checking' }
+ArchDocChecker >> componentFindings [
+	"What every map claiming my package says against itself. A reader opening a package is told
+	 its classes are unmapped without having to know which map claims it."
+
+	^ self maps flatCollect: [ :each | each findings ]
+]
+
+{ #category : 'checking' }
+ArchDocChecker >> countRows [
+	"The package, what was read, the total, and one row per kind of finding, counted from the
+	 findings themselves so that a kind written later appears here without being named."
+
+	| found kinds |
+	found := self findings.
+	kinds := (found collect: [ :each | each kind ]) asSet asSortedCollection asArray.
+	^ { { 'package'. model packageName asString } .
+		{ 'declarations'. model relations size printString } .
+		{ 'samples read'. self sampleInstances size printString } .
+		{ 'findings'. found size printString } }
+		, (kinds collect: [ :kind |
+			{ kind asString.
+			  (found count: [ :each | each kind = kind ]) printString } ])
+]
+
 { #category : 'private' }
 ArchDocChecker >> exampleRun [
 	"The one run of the examples, kept, so that reading a package runs each example once."
@@ -95,10 +120,12 @@ ArchDocChecker >> findings [
 	"Everything I can say about the package, in one collection: declarations naming a class the
 	 image does not answer, declarations with no reciprocal on the other side, live objects that
 	 contradict their class's declarations, classes that contradict their own, edges reaching a
-	 package the manifest forbids, and examples that cannot run."
+	 package the manifest forbids, examples that cannot run, and what a map claiming this package
+	 says about its own coverage."
 
 	^ self unresolvedRelations , self missingOpposites , self sampleInstanceViolations
 		, self classSideViolations , self forbiddenDependencies , self brokenExamples
+		, self componentFindings
 ]
 
 { #category : 'checking' }
@@ -145,20 +172,13 @@ ArchDocChecker >> forbids: aPackageName [
 { #category : 'inspector' }
 ArchDocChecker >> inspectionCounts: aBuilder [
 	"How many of each kind, counted from the answers themselves, so this tab cannot disagree
-	 with the one beside it."
+	 with the one beside it, and a kind written later needs no line here."
 
 	<inspectorPresentationOrder: 2 title: 'Summary'>
 	^ aBuilder newTable
-		items: {
-				'package' -> model packageName.
-				'declarations' -> model relations size printString.
-				'unresolved' -> self unresolvedRelations size printString.
-				'missing opposites' -> self missingOpposites size printString.
-				'sample violations' -> self sampleInstanceViolations size printString.
-				'forbidden dependencies' -> self forbiddenDependencies size printString.
-				'samples read' -> self sampleInstances size printString };
-		addColumn: ((SpStringTableColumn title: 'What' evaluated: [ :each | each key ]) width: 200);
-		addColumn: (SpStringTableColumn title: 'Count' evaluated: [ :each | each value ]);
+		items: self countRows;
+		addColumn: ((SpStringTableColumn title: 'What' evaluated: [ :each | each first ]) width: 200);
+		addColumn: (SpStringTableColumn title: 'Count' evaluated: [ :each | each second ]);
 		yourself
 ]
 
@@ -212,6 +232,15 @@ ArchDocChecker >> manyViolationOf: aRelation holding: aValue in: anObject [
 		ifTrue: [ nil ]
 		ifFalse: [
 			self finding: aRelation in: anObject saying: 'holds objects of another kind' ]
+]
+
+{ #category : 'accessing' }
+ArchDocChecker >> maps [
+	"Every map of the image that claims my package, asked of the maps themselves."
+
+	^ ArchDocComponentMap maps
+		select: [ :each | each packageNames includes: model packageName ]
+		thenCollect: [ :each | each new ]
 ]
 
 { #category : 'checking' }

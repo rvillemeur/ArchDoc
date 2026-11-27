@@ -55,6 +55,20 @@ ArchDocComponentMapTest >> testEveryDeclaredMapOfTheImageIsFoundByItsClass [
 	self deny: (ArchDocComponentMap maps includes: ArchDocComponentMap)
 ]
 
+{ #category : 'tests' }
+ArchDocComponentMapTest >> testTheBrokenExampleMapReportsOneFindingOfEachKind [
+	| map kinds |
+	map := ArchDocExampleMap new.
+	kinds := map findings collect: [ :each | each kind ].
+	self
+		assert: kinds asBag
+		equals: #( #unmappedClass #ambiguousClass #unknownComponentClass ) asBag.
+	self
+		assert: ((map findings detect: [ :each | each kind = #unmappedClass ]) explanation
+			includesSubstring: 'ArchDocCheckerExamples')
+		description: 'a finding says which class it is about'
+]
+
 { #category : 'tests - views' }
 ArchDocComponentMapTest >> testTheComponentsViewStatesEachPartItsSizeAndItsIntention [
 	| map presenter component |
@@ -84,4 +98,20 @@ ArchDocComponentMapTest >> testTheCoverageViewAsksTheMapRatherThanRestatingIt [
 			'unmapped' -> map unmappedClasses size printString.
 			'ambiguous' -> map ambiguousClasses size printString.
 			'not loaded' -> map unknownClassNames size printString }
+]
+
+{ #category : 'tests - views' }
+ArchDocComponentMapTest >> testTheFindingsViewSaysOneSentencePerFault [
+	| map presenter rows |
+	map := ArchDocExampleMap new.
+	presenter := ArchDocArtefactTest new presenterOf: #inspectionFindings: on: map.
+	rows := presenter items collect: [ :each |
+		(presenter columns first evaluation value: each)
+			-> (presenter columns second evaluation value: each) ].
+	self
+		assert: (rows collect: [ :each | each key ]) asArray
+		equals: (map findings collect: [ :each | each kind asString ]) asArray.
+	self
+		assert: rows first value
+		equals: map findings first explanation
 ]

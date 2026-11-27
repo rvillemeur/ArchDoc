@@ -102,6 +102,22 @@ ArchDocCheckerTest >> testAnOppositeTheTargetDoesNotDeclareIsReported [
 ]
 
 { #category : 'tests' }
+ArchDocCheckerTest >> testTheCheckerOfAClaimedPackageRepeatsWhatItsMapSays [
+	"A reader opening a package should not have to know a map exists to be told its classes are
+	 unmapped, so the checker folds in what every map claiming that package says."
+
+	| checker kinds |
+	checker := ArchDocChecker onPackageNamed: 'ArchDoc-Examples'.
+	kinds := (checker findings collect: [ :each | each kind ]) asSet.
+	self assert: (kinds includes: #unmappedClass).
+	self assert: (kinds includes: #ambiguousClass).
+	self assert: (kinds includes: #unknownComponentClass).
+	self
+		assert: (checker componentFindings collect: [ :each | each explanation ]) asArray
+		equals: (ArchDocExampleMap new findings collect: [ :each | each explanation ]) asArray
+]
+
+{ #category : 'tests' }
 ArchDocCheckerTest >> testTheExampleCheckerReportsAllFourKinds [
 	"The checker a reader clicks from the browser must show every kind at once, or the table
 	 teaches nothing about what the four answers mean."
@@ -113,4 +129,23 @@ ArchDocCheckerTest >> testTheExampleCheckerReportsAllFourKinds [
 		#( #unresolved #missingOpposite #sampleViolation #forbiddenDependency )).
 	self assert: ArchDocCheckerExamples findingAboutADeclarationThatPointsAtNothing kind
 		equals: #unresolved
+]
+
+{ #category : 'tests - views' }
+ArchDocCheckerTest >> testTheSummaryViewCountsEveryKindItFindsWithoutBeingToldTheKinds [
+	"A kind added to the findings must appear in the summary on its own, or the two tabs disagree
+	 the first time a new finding is written."
+
+	| checker presenter rows |
+	checker := ArchDocChecker onPackageNamed: 'ArchDoc-Examples'.
+	presenter := ArchDocArtefactTest new presenterOf: #inspectionCounts: on: checker.
+	rows := presenter items collect: [ :each |
+		(presenter columns first evaluation value: each)
+			-> (presenter columns second evaluation value: each) ].
+	self assert: (rows includes: 'unmappedClass' -> '1').
+	self assert: (rows includes: 'ambiguousClass' -> '1').
+	self assert: (rows includes: 'unknownComponentClass' -> '1').
+	self
+		assert: (rows includes: 'findings' -> checker findings size printString)
+		description: 'the total is counted from the findings themselves'
 ]
