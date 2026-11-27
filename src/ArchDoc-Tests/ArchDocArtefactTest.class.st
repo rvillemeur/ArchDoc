@@ -45,6 +45,17 @@ ArchDocArtefactTest >> presenterOf: aSelector on: anObject [
 ]
 
 { #category : 'accessing' }
+ArchDocArtefactTest >> projectClasses [
+	"Every class this project defines, test and example classes included, read through the
+	 project model rather than listed by hand so a package added later is covered at once. The
+	 baseline is named apart: its package name begins with Baseline and not with the project."
+
+	^ ((ArchDocProjectModel onPrefix: 'ArchDoc') packages
+		, { Smalltalk packageOrganizer packageNamed: 'BaselineOfArchDoc' })
+		flatCollect: [ :each | each definedClasses ]
+]
+
+{ #category : 'accessing' }
 ArchDocArtefactTest >> sampleInstances [
 	"Every object the class-side <sampleInstance> examples of ArchDoc-Examples answer, run now,
 	 so that an example which no longer runs fails here rather than under a reader's click. Two
@@ -58,6 +69,19 @@ ArchDocArtefactTest >> sampleInstances [
 			(self isRunnableExample: method)
 				ifTrue: [ found add: (each perform: method selector) ] ] ].
 	^ found asArray
+]
+
+{ #category : 'tests' }
+ArchDocArtefactTest >> testEveryClassCommentOfThisProjectIsCrOnly [
+	"Pharo writes a class comment into its Tonel file with CR line endings. A comment holding an
+	 LF therefore differs from the file for ever: the package reads dirty, the diff names every
+	 class of it with no method under any of them, and the work cannot be committed cleanly. It
+	 happened once over twenty-six classes, so the suite asks the question now."
+
+	self projectClasses do: [ :each |
+		self
+			deny: ((each comment ifNil: [ '' ]) includes: Character lf)
+			description: each name , ' has a class comment with LF line endings' ]
 ]
 
 { #category : 'tests' }
