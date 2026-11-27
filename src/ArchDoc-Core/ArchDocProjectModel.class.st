@@ -77,7 +77,7 @@ ArchDocProjectModel >> drawnEdges [
 	 that answers no question about where the project sits."
 
 	^ self edges select: [ :each |
-		(packages includes: each target) or: [ each isUse not ] ]
+		(self packages includes: each target) or: [ each isUse not ] ]
 ]
 
 { #category : 'accessing' }
@@ -99,7 +99,7 @@ ArchDocProjectModel >> graph [
 		title: self title
 		nodes: self nodes
 		edges: self drawnEdges
-		home: packages
+		home: self packages
 ]
 
 { #category : 'inspector' }
@@ -150,7 +150,7 @@ ArchDocProjectModel >> nodes [
 	"The packages of the project and every package a drawn arrow points at."
 
 	| found |
-	found := OrderedCollection newFrom: packages.
+	found := OrderedCollection newFrom: self packages.
 	self drawnEdges do: [ :each |
 		(found includes: each target) ifFalse: [ found add: each target ] ].
 	^ found asArray
@@ -195,9 +195,9 @@ ArchDocProjectModel >> title [
 	 named after it."
 
 	| shared |
-	packages ifEmpty: [ ^ 'no package' ].
-	shared := packages first name asString.
-	packages do: [ :each |
+	self packages ifEmpty: [ ^ 'no package' ].
+	shared := self packages first name asString.
+	self packages do: [ :each |
 		shared := self beginningSharedBy: shared and: each name asString ].
 	^ (shared endsWith: '-')
 		ifTrue: [ shared allButLast ]

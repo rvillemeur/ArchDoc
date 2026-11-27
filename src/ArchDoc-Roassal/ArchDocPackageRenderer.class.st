@@ -91,9 +91,10 @@ ArchDocPackageRenderer >> inspectionOmissions: aBuilder [
 { #category : 'accessing' }
 ArchDocPackageRenderer >> labelFor: aNode [
 	"A package box names the package and how many classes it holds: the first question asked of
-	 a project picture is which of these packages is the big one."
+	 a project picture is which of these packages is the big one. The name is asked of the graph,
+	 as my superclass asks it, so one altitude cannot call a node what another does not."
 
-	^ (ArchDocGraph describe: aNode) , ' ('
+	^ (graph describe: aNode) , ' ('
 		, aNode definedClasses size printString , ')'
 ]
 
