@@ -87,6 +87,24 @@ ArchDocReadingOrderTest >> testTheMostReachedClassIsFirstAndTheOrderIsTheSameTwi
 ]
 
 { #category : 'tests' }
+ArchDocReadingOrderTest >> testTheWeightOfANodeIsReadOnceHoweverManyComparisonsTheSortMakes [
+	"A sort of n nodes makes far more than n comparisons, and every comparison asks for a score,
+	 which reads the source of a node's methods. Read per comparison, a graph of forty-five
+	 packages took 1744 milliseconds to order; read once per node, the reading is bounded by the
+	 graph. Two sorts are asked for, because a reader opens the tab and asks again."
+
+	| spy |
+	spy := ArchDocReadingOrderSpy on: (ArchDocModel onPackageNamed: 'ArchDoc-Core') graph.
+	spy nodesInOrder.
+	spy nodesInOrder.
+	self assert: spy graph nodes size > 10.
+	self
+		assert: spy reads <= (spy graph nodes size * 2)
+		description: 'the source of a class was read ' , spy reads printString
+			, ' times for ' , spy graph nodes size printString , ' nodes'
+]
+
+{ #category : 'tests' }
 ArchDocReadingOrderTest >> testTheWhereToStartViewListsTheNodesInOrderAndEveryColumnReads [
 	"The tab is the whole point of the score, so it must hold one row per node, in the order,
 	 and every column must answer for every row: a column block runs only when a row is drawn,
