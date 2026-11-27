@@ -88,6 +88,15 @@ ArchDocComponentMap >> claimedClasses [
 		reject: [ :each | self describesRatherThanBelongs: each ]
 ]
 
+{ #category : 'graphing' }
+ArchDocComponentMap >> classEdges [
+	"Every edge of every claimed package, declared or inferred, read at class altitude by the
+	 models that already compute them."
+
+	^ self packages flatCollect: [ :each |
+		(ArchDocModel onPackage: each) allEdges ]
+]
+
 { #category : 'accessing' }
 ArchDocComponentMap >> componentNamed: aString [
 	^ self components
@@ -140,6 +149,28 @@ ArchDocComponentMap >> describesRatherThanBelongs: aClass [
 		or: [ aClass class canUnderstand: #components ]
 ]
 
+{ #category : 'graphing' }
+ArchDocComponentMap >> edges [
+	"The class-level edges, lifted. An edge inside one component disappears, because that is how
+	 the part is built and not an edge of the design; an edge whose source or target belongs to no
+	 component disappears too, since there is nothing to draw it between."
+
+	| grouped |
+	grouped := OrderedDictionary new.
+	self classEdges do: [ :each |
+		| source target |
+		source := self componentOf: each source.
+		target := self componentOf: each target.
+		(source notNil and: [ target notNil and: [ source ~= target ] ]) ifTrue: [
+			(grouped at: source name -> target name ifAbsentPut: [ OrderedCollection new ])
+				add: each ] ].
+	^ grouped associations collect: [ :each |
+		ArchDocLiftedEdge
+			from: (self componentNamed: each key key)
+			to: (self componentNamed: each key value)
+			over: each value asArray ]
+]
+
 { #category : 'checking' }
 ArchDocComponentMap >> findings [
 	"Everything I can say against myself: a claimed class no component names, a class two
@@ -147,6 +178,19 @@ ArchDocComponentMap >> findings [
 	 what a project wants."
 
 	^ self unmappedFindings , self ambiguousFindings , self unknownFindings
+]
+
+{ #category : 'graphing' }
+ArchDocComponentMap >> graph [
+	"A graph whose nodes are my components, so the renderer draws it the way it draws a package."
+
+	| components |
+	components := self components.
+	^ ArchDocGraph
+		title: self class name asString
+		nodes: components
+		edges: self edges
+		home: components
 ]
 
 { #category : 'inspector' }

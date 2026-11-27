@@ -34,6 +34,15 @@ ArchDocComponent class >> fromTableRow: anArray declaredIn: aClass [
 		yourself
 ]
 
+{ #category : 'comparing' }
+ArchDocComponent >> = anObject [
+	"Compare by the part I name, not by the reading that built me, so a map read twice answers
+	 components a set and an edge can match."
+
+	^ self class = anObject class
+		and: [ name = anObject name and: [ declaringClass = anObject declaringClass ] ]
+]
+
 { #category : 'accessing' }
 ArchDocComponent >> classNames [
 	^ classNames
@@ -51,6 +60,11 @@ ArchDocComponent >> classes [
 { #category : 'accessing' }
 ArchDocComponent >> declaringClass [
 	^ declaringClass
+]
+
+{ #category : 'comparing' }
+ArchDocComponent >> hash [
+	^ name hash bitXor: declaringClass hash
 ]
 
 { #category : 'testing' }

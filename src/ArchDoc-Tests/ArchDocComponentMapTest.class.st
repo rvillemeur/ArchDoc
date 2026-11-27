@@ -19,7 +19,7 @@ ArchDocComponentMapTest >> testAMapAnswersOneComponentPerRowInDeclarationOrder [
 	map := ArchDocExampleMap new.
 	self
 		assert: (map components collect: [ :each | each name ]) asArray
-		equals: #( 'Subjects' 'Examples' ).
+		equals: #( 'Subjects' 'Holders' 'Examples' ).
 	self assert: map components first declaringClass equals: ArchDocExampleMap
 ]
 
@@ -45,6 +45,54 @@ ArchDocComponentMapTest >> testAMapClaimsEveryClassOfItsPackagesAndSaysWhichItMi
 		deny: (map claimedClasses anySatisfy: [ :each | each inheritsFrom: PackageManifest ])
 		description: 'a package manifest is no part of a design'.
 	self assert: map unmappedClasses asArray equals: { ArchDocCheckerExamples }
+]
+
+{ #category : 'tests' }
+ArchDocComponentMapTest >> testAnEdgeInsideOneComponentIsNotLifted [
+	"Two classes of one part holding each other is how the part is built, not an edge of the
+	 design, so it is drawn at class altitude and nowhere else."
+
+	| map |
+	map := ArchDocExampleMap new.
+	self
+		deny: (map edges anySatisfy: [ :each | each source = each target ])
+		description: 'a lifted edge never points at its own component'
+]
+
+{ #category : 'tests' }
+ArchDocComponentMapTest >> testAnInferredUseBetweenTwoComponentsStaysVisible [
+	"A use between two parts that no declaration explains is what says a declaration is missing,
+	 so it is lifted like the rest and drawn faintly."
+
+	| map lifted |
+	map := ArchDocExampleMap new.
+	lifted := map edges detect: [ :each |
+		each source name = 'Examples' and: [ each target name = 'Subjects' ] ].
+	self assert: lifted kind equals: #use.
+	self assert: lifted count >= 1
+]
+
+{ #category : 'tests' }
+ArchDocComponentMapTest >> testEveryClassEdgeBetweenTwoComponentsLiftsIntoOneEdgeOfTheStrongestKind [
+	| map lifted |
+	map := ArchDocExampleMap new.
+	lifted := map edges
+		detect: [ :each |
+			each source name = 'Holders' and: [ each target name = 'Subjects' ] ].
+	self
+		assert: (map edges count: [ :each |
+			each source name = 'Holders' and: [ each target name = 'Subjects' ] ])
+		equals: 1.
+	self
+		assert: lifted kind equals: #holding.
+	self
+		assert: lifted count
+		equals: (map classEdges count: [ :each |
+			((map componentOf: each source) ifNotNil: [ :one | one name ]) = 'Holders'
+				and: [ ((map componentOf: each target) ifNotNil: [ :one | one name ]) = 'Subjects' ] ]).
+	self
+		assert: (lifted roles includesAll: #( 'source' 'metadata' 'outlines' ))
+		description: 'the roles that made the edge are kept for the popup'
 ]
 
 { #category : 'tests' }
@@ -74,9 +122,9 @@ ArchDocComponentMapTest >> testTheComponentsViewStatesEachPartItsSizeAndItsInten
 	| map presenter component |
 	map := ArchDocExampleMap new.
 	presenter := ArchDocArtefactTest new presenterOf: #inspectionComponents: on: map.
-	component := presenter items first.
-	self assert: (presenter columns first evaluation value: component) equals: 'Subjects'.
-	self assert: (presenter columns second evaluation value: component) equals: '3'.
+	component := presenter items second.
+	self assert: (presenter columns first evaluation value: component) equals: 'Holders'.
+	self assert: (presenter columns second evaluation value: component) equals: '2'.
 	self
 		assert: (presenter columns third evaluation value: component)
 		equals: component intention
@@ -114,4 +162,33 @@ ArchDocComponentMapTest >> testTheFindingsViewSaysOneSentencePerFault [
 	self
 		assert: rows first value
 		equals: map findings first explanation
+]
+
+{ #category : 'tests' }
+ArchDocComponentMapTest >> testTheGraphOfAMapHoldsTheComponentsAndTheLiftedEdges [
+	| map graph |
+	map := ArchDocExampleMap new.
+	graph := map graph.
+	self
+		assert: (graph nodes collect: [ :each | each name ]) asArray
+		equals: #( 'Subjects' 'Holders' 'Examples' ).
+	self assert: graph edges asArray equals: map edges asArray.
+	self
+		assert: (graph nodes allSatisfy: [ :each | graph holdsAtHome: each ])
+		description: 'every component of a map is a resident of that map'
+]
+
+{ #category : 'tests - views' }
+ArchDocComponentMapTest >> testTheLiftedArrowViewSaysTheKindTheCountAndTheRoles [
+	| edge presenter rows |
+	edge := ArchDocComponentExamples liftedEdge.
+	presenter := ArchDocArtefactTest new presenterOf: #inspectionLiftedArrow: on: edge.
+	rows := presenter items collect: [ :each |
+		(presenter columns first evaluation value: each)
+			-> (presenter columns second evaluation value: each) ].
+	self assert: (rows includes: 'kind' -> 'holding').
+	self assert: (rows includes: 'class edges' -> edge count printString).
+	self
+		assert: ((rows detect: [ :each | each key = 'roles' ]) value includesSubstring: 'source')
+		description: 'the roles that made the arrow are named'
 ]

@@ -27,6 +27,16 @@ ArchDocComponentExamples class >> glyphCache [
 ]
 
 { #category : 'examples' }
+ArchDocComponentExamples class >> liftedEdge [
+	"The holding arrow the example map lifts between its two first parts."
+
+	<sampleInstance>
+	^ ArchDocExampleMap new edges
+		detect: [ :each | each kind = #holding ]
+		ifNone: [ ArchDocExampleMap new edges first ]
+]
+
+{ #category : 'examples' }
 ArchDocComponentExamples class >> map [
 	"The map of this examples package. It is broken on purpose in three ways, so the Coverage view
 	 shows a finding of each kind."

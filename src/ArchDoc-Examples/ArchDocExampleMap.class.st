@@ -15,15 +15,21 @@ Class {
 
 { #category : 'declaring' }
 ArchDocExampleMap class >> components [
-	"A map of this examples package, broken on purpose in three ways, so that the checker's own
-	 test has one finding of each kind to read: ArchDocBrokenSubject is named twice,
-	 ArchDocNoSuchClass is a name no image holds, and ArchDocCheckerExamples is named nowhere."
+	"A map of this examples package, in three parts, so that the lifted edges have something to
+	 say: the holders hold the subject, and the examples only reference it.
+
+	 It is also broken on purpose in three ways, so that the checker's own test has one finding of
+	 each kind to read: ArchDocBrokenSubject is named twice, ArchDocNoSuchClass is a name no image
+	 holds, and ArchDocCheckerExamples is named nowhere."
 
 	<archDocDeliberatelyBroken>
 	^ {
 		#( 'Subjects'
-			#( #ArchDocDeclaredSubject #ArchDocHiddenSubject #ArchDocBrokenSubject )
-			'the three classes whose declarations every other test reads' ) .
+			#( #ArchDocDeclaredSubject )
+			'the class whose declarations every other test reads' ) .
+		#( 'Holders'
+			#( #ArchDocHiddenSubject #ArchDocBrokenSubject )
+			'the two classes that declare a holding of the subject' ) .
 		#( 'Examples'
 			#( #ArchDocModelExamples #ArchDocRelationExamples #ArchDocRendererExamples
 				#ArchDocComponentExamples #ArchDocBrokenSubject #ArchDocNoSuchClass )
