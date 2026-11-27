@@ -55,3 +55,20 @@ ArchDocPackageRendererTest >> testTheOmissionsViewNamesEveryOutsidePackageTheDia
 	self assert: (presenter items allSatisfy: [ :each |
 		(renderer canvas nodes anySatisfy: [ :node | node model = each target ]) not ])
 ]
+
+{ #category : 'tests' }
+ArchDocPackageRendererTest >> testThePackageInFocusIsFilledApartFromTheOtherPackagesOfTheProject [
+	"A reader opening one package wants to see where that package sits. Every package of the
+	 project is a resident, so the one asked about carries a fill of its own, named in the
+	 legend like every other style."
+
+	| project core renderer |
+	project := ArchDocProjectModel onPrefix: 'ArchDoc'.
+	core := project packageNamed: 'ArchDoc-Core'.
+	renderer := ArchDocPackageRenderer onProject: project focusing: core.
+	self assert: (renderer fillFor: core) equals: renderer focusColor.
+	self assert: renderer focusColor ~= renderer residentColor.
+	self assert: ((project packages reject: [ :each | each = core ]) allSatisfy: [ :each |
+		(renderer fillFor: each) = renderer residentColor ]).
+	self assert: (renderer legendRows anySatisfy: [ :each | each first = 'in focus' ])
+]

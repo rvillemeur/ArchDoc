@@ -16,7 +16,8 @@ Class {
 	#name : 'ArchDocPackageRenderer',
 	#superclass : 'ArchDocGraphRenderer',
 	#instVars : [
-		'project'
+		'project',
+		'focus'
 	],
 	#category : 'ArchDoc-Roassal',
 	#package : 'ArchDoc-Roassal'
@@ -30,6 +31,42 @@ ArchDocPackageRenderer class >> onProject: anArchDocProjectModel [
 	^ (self on: anArchDocProjectModel graph)
 		setProject: anArchDocProjectModel;
 		yourself
+]
+
+{ #category : 'instance creation' }
+ArchDocPackageRenderer class >> onProject: anArchDocProjectModel focusing: aPackage [
+	"The project drawn for a reader who came from one of its packages: that package carries a
+	 fill of its own, so the picture answers where it sits."
+
+	^ (self onProject: anArchDocProjectModel)
+		setFocus: aPackage;
+		yourself
+]
+
+{ #category : 'rendering' }
+ArchDocPackageRenderer >> fillFor: aNode [
+	"The package the reader came from first, then the residents and the visitors as my
+	 superclass fills them."
+
+	^ aNode = focus
+		ifTrue: [ self focusColor ]
+		ifFalse: [ super fillFor: aNode ]
+]
+
+{ #category : 'accessing' }
+ArchDocPackageRenderer >> focus [
+	"The package the reader came from, drawn apart from the rest, or nothing when the whole
+	 project was asked for."
+
+	^ focus
+]
+
+{ #category : 'styles' }
+ArchDocPackageRenderer >> focusColor [
+	"The fill of the package the reader came from. Named here and nowhere else, so the legend
+	 and the boxes cannot disagree."
+
+	^ Color r: 0.99 g: 0.9 b: 0.6
 ]
 
 { #category : 'inspector' }
@@ -60,12 +97,27 @@ ArchDocPackageRenderer >> labelFor: aNode [
 		, aNode definedClasses size printString , ')'
 ]
 
+{ #category : 'styles' }
+ArchDocPackageRenderer >> legendRows [
+	"My superclass's rows, and the one fill of my own, which is there only when a reader came
+	 from a package."
+
+	^ focus
+		ifNil: [ super legendRows ]
+		ifNotNil: [ super legendRows , { { 'in focus'. 'filled box'. self focusColor } } ]
+]
+
 { #category : 'accessing' }
 ArchDocPackageRenderer >> project [
 	"The project I draw."
 
 	<archRelation: #one to: #ArchDocProjectModel>
 	^ project
+]
+
+{ #category : 'private' }
+ArchDocPackageRenderer >> setFocus: aPackage [
+	focus := aPackage
 ]
 
 { #category : 'private' }
