@@ -100,10 +100,11 @@ ArchDocGraphRenderer >> canvas [
 	^ canvas ifNil: [ canvas := self drawCanvas ]
 ]
 
-{ #category : 'private' }
+{ #category : 'styles' }
 ArchDocGraphRenderer >> colorFor: anEdge [
 	"Named here and nowhere else, so the legend and the lines cannot disagree."
 
+	anEdge isForbidden ifTrue: [ ^ Color red ].
 	anEdge isUse ifTrue: [ ^ Color gray alpha: 0.3 ].
 	anEdge isCache ifTrue: [ ^ Color blue alpha: 0.8 ].
 	^ Color black
@@ -191,13 +192,14 @@ ArchDocGraphRenderer >> labelFor: aNode [
 	^ graph describe: aNode
 ]
 
-{ #category : 'accessing' }
+{ #category : 'styles' }
 ArchDocGraphRenderer >> legendRows [
-	"What each style of the drawing means: name, what carries it, and the colour. The colours are
-	 asked of the renderer rather than restated, so the legend cannot drift from the picture."
+	"What each style of the drawing means: name, what carries it, and the colour. The colours
+	 are asked of the renderer rather than restated, so the legend cannot drift from the
+	 picture."
 
 	| lineRows |
-	lineRows := #( #holding #cache #use ) collect: [ :kind |
+	lineRows := #( #holding #cache #use #forbidden ) collect: [ :kind |
 		| sample |
 		sample := ArchDocEdge from: Object to: Object kind: kind label: ''.
 		{ kind asString.

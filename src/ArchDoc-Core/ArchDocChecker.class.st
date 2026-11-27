@@ -31,9 +31,29 @@ Class {
 	#tag : 'Checking'
 }
 
+{ #category : 'forbidding' }
+ArchDocChecker class >> forbiddenPatternsOf: aPackage [
+	"What the manifest of a package says it may not depend on, read from the manifest because
+	 that is where Pharo already keeps what a package says about itself. A package with no such
+	 declaration forbids nothing. On the class side, so that a reader of a project asks the same
+	 question of a package without building a checker for it."
+
+	| found |
+	found := OrderedCollection new.
+	aPackage definedClasses do: [ :each |
+		(each class canUnderstand: #archDocForbiddenDependencies)
+			ifTrue: [ found addAll: each archDocForbiddenDependencies ] ].
+	^ found asArray
+]
+
 { #category : 'instance creation' }
 ArchDocChecker class >> onModel: anArchDocModel [
 	^ self new setModel: anArchDocModel
+]
+
+{ #category : 'instance creation' }
+ArchDocChecker class >> onPackage: aPackage [
+	^ self onModel: (ArchDocModel onPackage: aPackage)
 ]
 
 { #category : 'instance creation' }
@@ -47,6 +67,15 @@ ArchDocChecker class >> opensAWindow: aSelector [
 	 in batch may run one: a suite that opens windows cannot be run unattended."
 
 	^ aSelector beginsWith: 'open'
+]
+
+{ #category : 'forbidding' }
+ArchDocChecker class >> package: aPackage forbids: aPackageName [
+	"A declaration is a match pattern and not a name, so one line can forbid a whole project:
+	 'Roassal*' answers true for every package of it."
+
+	^ (self forbiddenPatternsOf: aPackage) anySatisfy: [ :each |
+		each match: aPackageName ]
 ]
 
 { #category : 'checking' }
@@ -148,25 +177,20 @@ ArchDocChecker >> forbiddenDependencies [
 					, ', which this package may not depend on' ]
 ]
 
-{ #category : 'private' }
+{ #category : 'checking' }
 ArchDocChecker >> forbiddenPackageNames [
-	"Read from the manifest of the checked package, which is where Pharo already keeps what a
-	 package says about itself. A package with no such declaration forbids nothing."
+	"Read from the manifest of the checked package. My class answers it, so a reader of a whole
+	 project asks the same question without building a checker for every package."
 
-	| found |
-	found := OrderedCollection new.
-	model package definedClasses do: [ :each |
-		(each class canUnderstand: #archDocForbiddenDependencies)
-			ifTrue: [ found addAll: each archDocForbiddenDependencies ] ].
-	^ found asArray
+	^ self class forbiddenPatternsOf: model package
 ]
 
-{ #category : 'private' }
+{ #category : 'checking' }
 ArchDocChecker >> forbids: aPackageName [
 	"A declaration is a match pattern, not a name, so one line can forbid a whole project:
 	 'Roassal*' answers true for every package of it."
 
-	^ self forbiddenPackageNames anySatisfy: [ :each | each match: aPackageName ]
+	^ self class package: model package forbids: aPackageName
 ]
 
 { #category : 'inspector' }

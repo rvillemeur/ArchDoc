@@ -92,6 +92,14 @@ ArchDocEdge >> isCache [
 ]
 
 { #category : 'testing' }
+ArchDocEdge >> isForbidden [
+	"An arrow the manifest of its source forbids. It is a kind of its own, so the drawing and
+	 the legend say it in one place with every other kind."
+
+	^ kind = #forbidden
+]
+
+{ #category : 'testing' }
 ArchDocEdge >> isUse [
 	^ kind = #use
 ]
@@ -108,6 +116,15 @@ ArchDocEdge >> label [
 	"The role the declaration gives, or an empty string for an inferred use."
 
 	^ label
+]
+
+{ #category : 'marking' }
+ArchDocEdge >> markForbidden [
+	"Say that the manifest of my source forbids my target. The kind is what every style and
+	 every legend row is read from, so a forbidden arrow is a kind and not a flag beside one.
+	 It is set while I am being built and not after a reader has me."
+
+	kind := #forbidden
 ]
 
 { #category : 'printing' }

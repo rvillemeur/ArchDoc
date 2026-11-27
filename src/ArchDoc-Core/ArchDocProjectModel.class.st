@@ -122,8 +122,8 @@ ArchDocProjectModel >> inspectionPackages: aBuilder [
 
 { #category : 'private' }
 ArchDocProjectModel >> liftClassEdges [
-	"Group the class edges by the pair of packages their two ends live in, and make one lifted
-	 edge of each group."
+	"Group the class edges by the pair of packages their two ends live in, make one lifted edge
+	 of each group, and mark the ones the source package's manifest forbids."
 
 	| grouped |
 	grouped := OrderedDictionary new.
@@ -135,10 +135,14 @@ ArchDocProjectModel >> liftClassEdges [
 			(grouped at: source -> target ifAbsentPut: [ OrderedCollection new ])
 				add: each ] ].
 	^ grouped associations collect: [ :each |
-		ArchDocLiftedEdge
+		| lifted |
+		lifted := ArchDocLiftedEdge
 			from: each key key
 			to: each key value
-			over: each value asArray ]
+			over: each value asArray.
+		(ArchDocChecker package: each key key forbids: each key value name asString)
+			ifTrue: [ lifted markForbidden ].
+		lifted ]
 ]
 
 { #category : 'accessing' }

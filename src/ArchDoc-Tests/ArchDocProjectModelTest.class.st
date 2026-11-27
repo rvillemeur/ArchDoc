@@ -6,6 +6,21 @@ Class {
 }
 
 { #category : 'tests' }
+ArchDocProjectModelTest >> testAnArrowAPackageManifestForbidsIsMarkedForbidden [
+	"The manifest of ArchDoc-Examples forbids ArchDoc-Core on purpose, which is the fixture the
+	 checker's own test reads. At package altitude that one declaration marks the whole arrow."
+
+	| project forbidden |
+	project := ArchDocProjectModel onPrefix: 'ArchDoc'.
+	forbidden := project edges detect: [ :each |
+		each source name = #'ArchDoc-Examples'
+			and: [ each target name = #'ArchDoc-Core' ] ].
+	self assert: forbidden kind equals: #forbidden.
+	self assert: forbidden isForbidden.
+	self deny: forbidden isUse
+]
+
+{ #category : 'tests' }
 ArchDocProjectModelTest >> testEveryNodeAndEveryArrowNamesAPackageByItsOwnName [
 	"A node of this graph is a package and not a class, and a reader meets it in a box and in a
 	 table. Both ask the node what it is called, so neither says 'a Package(ArchDoc-Core)'."
@@ -38,6 +53,24 @@ ArchDocProjectModelTest >> testTheDiagramDrawsWhatTheProjectDeclaresOutsideItsel
 	self assert: (outside allSatisfy: [ :each |
 		project drawnEdges anySatisfy: [ :edge |
 			edge target = each and: [ edge isUse not ] ] ])
+]
+
+{ #category : 'tests' }
+ArchDocProjectModelTest >> testTheForbiddenArrowsAreExactlyWhatTheCheckerReports [
+	"One rule, read two ways: the project marks an arrow, and the checker reports a class
+	 reference. Both read the manifest, and this test holds them to the same answer, so a red
+	 line in the picture is always a finding and a finding is always a red line."
+
+	| project drawn reported |
+	project := ArchDocProjectModel onPrefix: 'ArchDoc'.
+	drawn := (project edges select: [ :each | each isForbidden ]) collect: [ :each |
+		each source name -> each target name ].
+	reported := Set new.
+	project packages do: [ :package |
+		(ArchDocChecker onPackage: package) forbiddenDependencies do: [ :finding |
+			finding subject target package ifNotNil: [ :target |
+				reported add: package name -> target name ] ] ].
+	self assert: drawn asSet equals: reported
 ]
 
 { #category : 'tests' }

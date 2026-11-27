@@ -27,6 +27,20 @@ ArchDocGraphRendererTest >> testACacheIsDashedAndAnInferredUseIsFainterThanAHold
 ]
 
 { #category : 'tests' }
+ArchDocGraphRendererTest >> testAForbiddenArrowIsDrawnInRedAndNamedInTheLegend [
+	"A layering rule broken is the one thing a reader must see without reading a table, so it is
+	 the one red line in the picture, and the legend says what red means."
+
+	| project renderer edge line |
+	project := ArchDocProjectModel onPrefix: 'ArchDoc'.
+	renderer := ArchDocGraphRenderer on: project graph.
+	edge := project drawnEdges detect: [ :each | each isForbidden ].
+	line := renderer canvas lines detect: [ :each | each model = edge ].
+	self assert: line color equals: Color red.
+	self assert: (renderer legendRows anySatisfy: [ :each | each first = 'forbidden' ])
+]
+
+{ #category : 'tests' }
 ArchDocGraphRendererTest >> testANodeIsABoxedLabelAndAVisitorIsNotFilledLikeAResident [
 	"A bare label tells the layout nothing about its extent, so the labels pile on top of one
 	 another. A box has a size. The fill says which classes belong to the package being drawn, so
