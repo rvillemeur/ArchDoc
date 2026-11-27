@@ -192,3 +192,14 @@ ArchDocComponentMapTest >> testTheLiftedArrowViewSaysTheKindTheCountAndTheRoles 
 		assert: ((rows detect: [ :each | each key = 'roles' ]) value includesSubstring: 'source')
 		description: 'the roles that made the arrow are named'
 ]
+
+{ #category : 'tests - views' }
+ArchDocComponentMapTest >> testTheMapDrawsItsPartsAsADiagram [
+	| map presenter boxes |
+	map := ArchDocExampleMap new.
+	presenter := ArchDocArtefactTest new presenterOf: #inspectionDiagram: on: map.
+	boxes := presenter canvas nodes select: [ :each | each class = RSComposite ].
+	self
+		assert: (boxes collect: [ :each | each model ]) asArray
+		equals: map components asArray
+]
