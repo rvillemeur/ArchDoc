@@ -25,3 +25,12 @@ ArchDocComponentExamples class >> glyphCache [
 			'keeps the answer so the question is asked once' )
 		declaredIn: self
 ]
+
+{ #category : 'examples' }
+ArchDocComponentExamples class >> map [
+	"The map of this examples package. It is broken on purpose in three ways, so the Coverage view
+	 shows a finding of each kind."
+
+	<sampleInstance>
+	^ ArchDocExampleMap new
+]

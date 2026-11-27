@@ -73,13 +73,15 @@ ArchDocArtefactTest >> testEveryClassHasAClassComment [
 
 { #category : 'tests' }
 ArchDocArtefactTest >> testEveryClassHasASampleInstanceExample [
-	"A reader meets these classes from the browser, so each one must have an object to click."
+	"A reader meets these classes from the browser, so each one must have an object to click. An
+	 abstract class is met through an instance of one of its subclasses, which is the only object
+	 it can have."
 
 	| classes |
 	classes := self sampleInstances collect: [ :each | each class ].
 	self documentedClasses do: [ :each |
 		self
-			assert: (classes includes: each)
+			assert: (classes anySatisfy: [ :sampled | sampled includesBehavior: each ])
 			description: each name , ' has no <sampleInstance> example' ]
 ]
 
