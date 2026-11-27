@@ -136,6 +136,23 @@ ArchDocGraphRendererTest >> testTheExampleRendererDrawsTheExamplePackage [
 ]
 
 { #category : 'tests' }
+ArchDocGraphRendererTest >> testTheLegendNamesEveryKindOfArrowTheEdgeClassKnows [
+	"The kinds are the vocabulary of the whole library. A legend holding its own list of them
+	 drifts the moment a kind is written: the red forbidden arrow existed for a day before the
+	 comment of ArchDocEdge said so. The renderer asks the edge class instead, and this test
+	 holds the two together."
+
+	| renderer named |
+	renderer := ArchDocGraphRenderer onPackageNamed: 'ArchDoc-Examples'.
+	named := (renderer legendRows collect: [ :each | each first ]) asSet.
+	self assert: ArchDocEdge kinds isNotEmpty.
+	ArchDocEdge kinds do: [ :kind |
+		self
+			assert: (named includes: kind asString)
+			description: 'the legend does not name ' , kind asString ]
+]
+
+{ #category : 'tests' }
 ArchDocGraphRendererTest >> testTheLegendStatesTheBoxFillsAsWellAsTheLineStyles [
 	"The fill of a box now carries meaning — a class of the drawn package, or one a declaration
 	 reaches into another package for. A legend that names the lines alone leaves the reader to

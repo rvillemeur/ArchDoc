@@ -30,6 +30,24 @@ ArchDocEdge class >> from: aClass to: anotherClass kind: aSymbol label: aString 
 	^ self new setSource: aClass target: anotherClass kind: aSymbol label: aString
 ]
 
+{ #category : 'accessing' }
+ArchDocEdge class >> kinds [
+	"Every kind an arrow can carry: the three a reading states, and the forbidden one a manifest
+	 declares over them. A forbidden arrow is ranked by nothing — it replaces whatever the
+	 reading said — so it is named here and not in the ranking."
+
+	^ self kindsByStrength , #( #forbidden )
+]
+
+{ #category : 'accessing' }
+ArchDocEdge class >> kindsByStrength [
+	"The kinds a reading of the code can state, strongest fact first: a declared holding, a
+	 declared cache, an inferred use. A lift of several class edges onto one arrow takes the
+	 first of these any of them carries, so the order is the ranking and not a list."
+
+	^ #( #holding #cache #use )
+]
+
 { #category : 'instance creation' }
 ArchDocEdge class >> useFrom: aClass to: anotherClass [
 	"A reference no declaration states. It carries no label: there is no role to name."
@@ -106,7 +124,8 @@ ArchDocEdge >> isUse [
 
 { #category : 'accessing' }
 ArchDocEdge >> kind [
-	"One of #holding, #cache and #use."
+	"One of the kinds my class names: a declared holding, a declared cache, an inferred use, or
+	 a forbidden reach a manifest declares over them."
 
 	^ kind
 ]

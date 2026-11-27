@@ -45,9 +45,11 @@ ArchDocLiftedEdge class >> from: aComponent to: anotherComponent over: aCollecti
 
 { #category : 'instance creation' }
 ArchDocLiftedEdge class >> strongestKindOf: aCollection [
-	"A holding over a cache over a use: the strongest fact a reader can be told about the pair."
+	"A holding over a cache over a use: the strongest fact a reader can be told about the pair.
+	 The ranking is the order ArchDocEdge declares its kinds in, read from there so that a kind
+	 written later is ranked in one place."
 
-	^ #( #holding #cache #use )
+	^ ArchDocEdge kindsByStrength
 		detect: [ :kind | aCollection anySatisfy: [ :each | each kind = kind ] ]
 		ifNone: [ #use ]
 ]

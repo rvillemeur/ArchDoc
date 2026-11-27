@@ -126,3 +126,20 @@ ArchDocProjectModelTest >> testTheRoassalPackageReachesTheCoreAndTheCoreReachesN
 	self assert: backward isEmpty.
 	self assert: forward anyOne count > 1
 ]
+
+{ #category : 'tests' }
+ArchDocProjectModelTest >> testTheStrongestKindIsReadFromTheDeclaredOrderOfTheKinds [
+	"A lift says the strongest fact about a pair, and strength is the order ArchDocEdge declares:
+	 a holding over a cache over a use. The order is read from there rather than restated, so a
+	 kind written later cannot be ranked in one place and drawn in another."
+
+	| classEdges |
+	ArchDocEdge kindsByStrength do: [ :strong |
+		(ArchDocEdge kindsByStrength copyAfter: strong) do: [ :weaker |
+			classEdges := {
+				ArchDocEdge from: Object to: Array kind: weaker label: ''.
+				ArchDocEdge from: Object to: Array kind: strong label: '' }.
+			self
+				assert: (ArchDocLiftedEdge strongestKindOf: classEdges)
+				equals: strong ] ]
+]

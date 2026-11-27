@@ -194,12 +194,12 @@ ArchDocGraphRenderer >> labelFor: aNode [
 
 { #category : 'styles' }
 ArchDocGraphRenderer >> legendRows [
-	"What each style of the drawing means: name, what carries it, and the colour. The colours
-	 are asked of the renderer rather than restated, so the legend cannot drift from the
-	 picture."
+	"What each style of the drawing means: name, what carries it, and the colour. The kinds are
+	 asked of ArchDocEdge and the colours of the renderer, both rather than restated, so neither
+	 the list of kinds nor the colour of one can drift from the picture."
 
 	| lineRows |
-	lineRows := #( #holding #cache #use #forbidden ) collect: [ :kind |
+	lineRows := ArchDocEdge kinds collect: [ :kind |
 		| sample |
 		sample := ArchDocEdge from: Object to: Object kind: kind label: ''.
 		{ kind asString.
