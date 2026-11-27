@@ -222,34 +222,67 @@ altitude however well the boxes are spaced.
 
 ## 5. Phase B — the package graph
 
-Four units.
+Four units, all done.
 
-### B1 — `ArchDocProjectModel`
+### B1 — `ArchDocProjectModel` (done)
 
-Built from a package-name prefix or a list: nodes are packages, edges are references between them,
-counted.
-It reuses `ArchDocModel >> classesReferencedBy:` per package rather than inventing a second scan.
+Built from a package-name prefix or a list of names: nodes are packages, edges are references
+between them, counted. It reuses the class-altitude models rather than inventing a second scan —
+one `ArchDocModel` per package answers `allEdges`, and `liftClassEdges` lifts them onto the packages
+the two ends live in, the same lifting a component map does over its parts.
 
-- Red test: a project of the four ArchDoc packages draws an edge from `ArchDoc-Roassal` to
-  `ArchDoc-Core` and none the other way, and the edge carries its count.
+As built, two things the plan did not say:
 
-### B2 — forbidden edges are marked
+- The diagram draws every arrow between two packages of the project, and of the arrows pointing
+  outside it only the ones a declaration states. Every package reaches the kernel and the
+  collections, so a picture holding all of that answers no question about where the project sits.
+  `edges` keeps the complete set for the tables and the checker; `drawnEdges` is what the picture
+  shows, and `ArchDocPackageRenderer` says in its *Left out* tab what was dropped.
+- Naming a node moved to `ArchDocGraph class >> describe:`, which both the graph and the edge ask.
+  Each said it for itself before, and both said it of classes alone, so a package node read as
+  `a Package(ArchDoc-Core)` in a box. Anything that answers `name` is called by it; a live object in
+  an object graph prints itself. The first attempt was an `archDocDescription` extension on `Object`,
+  `Class` and `Package`, which was withdrawn: an extension pulls Pharo's own class into this
+  package, and `run_critics` on `ArchDoc-Core` then reported thirty-four critiques of the kernel.
 
-An edge that `archDocForbiddenDependencies` forbids is drawn in red and reported by the checker,
-with one source of truth: the drawn red edges and `ArchDocChecker >> forbiddenDependencies`, lifted
-to packages, must be the same set.
+`title` is the beginning every package name shares, without the separating dash, so the project is
+called `ArchDoc` and `VectorGraphics` with nothing declared.
 
-- Red test states exactly that equality, so neither can drift.
+### B2 — forbidden edges are marked (done)
 
-### B3 — drawing a package
+A package arrow whose source manifest forbids its target is `#forbidden`, a kind of its own rather
+than a flag beside one, so the style and the legend row are read off the kind like every other.
+Being a kind and not a use, such an arrow is also drawn when it points out of the project: a
+forbidden reach is the reason to look outside.
 
-Box holds the package name and its class count; the resident fill marks the packages of the project,
-the visitor fill the packages it depends on from outside.
+The manifest reading moved to `ArchDocChecker class >> forbiddenPatternsOf:` and
+`class >> package:forbids:`, which the checker's own instance side now asks as well, so there is one
+place to read it. `ArchDocProjectModelTest` holds the red lines and the checker's findings to the
+same set of package pairs, which is the equality this unit was for.
 
-### B4 — the tab
+### B3 — drawing a package (done)
 
-`Package >> inspectionNeighbours: aBuilder`, order 80, showing the project graph with this package
-highlighted, and `VGDocumentationExamples class >> projectPackageGraph` as the one-click example.
+`ArchDocPackageRenderer`, a subclass of `ArchDocGraphRenderer`. A box names the package and how many
+classes it holds; the fill marks a package of the project against one it depends on. It keeps the
+force layout, because a project holds cycles between its own packages.
+
+It keeps the project beside the graph, for the question this picture provokes: what is not drawn.
+Its *Left out* tab names every reference out of the project that no declaration states, with the
+count of class references behind each.
+
+### B4 — the tab (done)
+
+- `ArchDocPackageRenderer class >> onProject:focusing:` and `focusColor`: the package a reader came
+  from is filled apart from the other residents, and the legend says so when there is one.
+- `Package >> inspectionNeighbours:`, order 80, with `Package >> archDocProject` and the gate
+  `inspectionNeighboursContext:` on this project's own package prefix. It lives in
+  `VectorGraphics-Documentation` beside the architecture and components tabs, and not in
+  `ArchDoc-Roassal`: an extension of `Package` pulls Pharo's class into the extending package's
+  critics, and `ArchDoc-Roassal` is held to none.
+- The three altitudes now read widest first on a package of the project: the project at 80, the
+  components at 85, the classes at 90.
+- `VGDocumentationExamples class >> projectPackageGraph` is the one-click example, with
+  `VectorGraphics-Canvas-Fonts` in focus.
 
 **Cost: about one session.** It is cheap because every ingredient exists; it is worth having because
 it is the picture that says where a package sits, which no class diagram can.
