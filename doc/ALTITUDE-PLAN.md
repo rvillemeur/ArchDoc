@@ -63,41 +63,52 @@ A fourth, the object graph of one live instance, already exists.
 **Reading order.** The order in which the classes of a component, or the components of a project,
 repay being read. A hint for a newcomer, not a ranking of importance.
 
-## 3. The open decisions, to settle before any code
+## 3. The decisions, settled on 2026-11-27
 
-These are interview questions, in the order they must be answered, because each one changes the
-next. The recommendation is stated first in each case.
+Eight decisions, taken in the interview that preceded the first unit. They are stated here as
+decided, because every unit below reads them.
 
-1. **Does a component map belong to a package or to a project?**
-   Recommended: to a project. The font route spans `VectorGraphics-Canvas-Fonts`,
-   `VectorGraphics-Bloc-Text` and `VectorGraphics-TrueType`, and a component that stopped at a
-   package boundary would cut the route in three. A package tab then shows the slice of the map that
-   touches that package.
-2. **Where is the map declared?** Recommended: a class-side method `archDocComponents` on the
-   manifest of the package that owns the route, read the way `archDocForbiddenDependencies` already
-   is. No new file, no new format, and Pharo already keeps a package's statements about itself
-   there.
-3. **May a class belong to two components?** Recommended: no, and the checker reports it. Overlap is
-   how a map stops being a map.
-4. **Must every class be mapped?** Recommended: yes for the classes of the packages the map claims,
-   and an unmapped class is a finding rather than an error — a new class is unmapped until someone
-   says where it belongs, and the finding is the reminder.
-5. **How deep does drill-down go?** Recommended: packages → components → classes → one live object,
-   with the existing tabs as the last two steps.
-6. **Does a component diagram show inferred uses?** Recommended: yes, faint, as the class diagram
-   does, because a use between two components that no declaration explains is exactly what the
-   reader should see.
+1. **A map is project-scoped.** One map covers a route across packages. The font route spans
+   `VectorGraphics-Canvas-Fonts`, `VectorGraphics-Bloc-Text` and `VectorGraphics-TrueType`, and a
+   component that stopped at a package boundary would cut the route in three. A package tab shows
+   the slice of the map that touches that package.
+2. **A map is a class.** `VGFontRouteMap`, a subclass of `ArchDocComponentMap`, in the project's
+   documentation package. `class >> packageNames` states the packages it claims and
+   `class >> components` holds the rows. Maps are found by `ArchDocComponentMap allSubclasses`, so a
+   project may hold several routes. The manifest was the alternative, and it was declined because a
+   map that spans three packages has no manifest it belongs to.
+3. **Coverage is total and components are disjoint**, over the packages a map claims. A class in no
+   component is `#unmappedClass`; a class in two is `#ambiguousClass`; a name the image does not
+   hold is `#unknownComponentClass`. All three are findings, so a class added to the route turns the
+   architecture test red until someone says where it belongs.
+4. **Drill-down is by inspecting the component.** A click on a node inspects that
+   `ArchDocComponent`, which carries its own tabs. There is no breadcrumb and no second canvas: the
+   inspector's own history is the way back.
+5. **All three edge kinds lift.** One edge per ordered pair of components, styled by the strongest
+   kind it carries — `#holding` over `#cache` over `#use` — labelled with how many class-level
+   edges it stands for, with the roles in the popup. An inferred use between two components that no
+   declaration explains stays visible, faintly, because that is what says a declaration is missing.
+6. **Declaration order lays out the component diagram.** Components are drawn left to right in the
+   order the map declares them, so the route reads from its input to its output and a backward edge
+   is visibly backward. No force layout at component altitude, which makes the picture the same on
+   every open. Class altitude keeps the force layout, because a package has no inherent order.
+7. **Two entry points.** Inspecting the map class gives Components, Findings and Reading order;
+   every claimed package gains a Components tab showing its slice, beside the Architecture tab it
+   already has.
+8. **The first map claims `VectorGraphics-Canvas-Fonts` and `VectorGraphics-Bloc-Text`** — 21
+   classes, about five components. `VectorGraphics-TrueType` and its 44 classes join once its own
+   declarations exist, and draw as visitor boxes until then.
 
 ## 4. Phase A — component altitude
 
 Seven units. Each unit ends with the five artefacts and clean critics (§7).
 
-### A1 — `ArchDocComponent`
+### A1 — `ArchDocComponent` (done)
 
-A value object over one row of the authored map: name, classes, intention.
+A value object over one row of the authored map: name, class names, intention, declaring class.
 
 ```smalltalk
-ManifestVectorGraphicsCanvasFonts class >> archDocComponents
+VGFontRouteMap class >> components
 	^ {
 		#( 'Glyph cache' #( VGGlyphAtlas VGGlyphMask ) 'keeps the rasterised mask of a glyph so a
 			 character is drawn once and blitted thereafter' ) .
@@ -105,26 +116,26 @@ ManifestVectorGraphicsCanvasFonts class >> archDocComponents
 			 is built with' ) }
 ```
 
-- Red test: a row answers its name, its classes and its intention; a row naming a class the image
-  does not hold answers that name through `unknownClassNames` and does not raise.
-- Smallest code: `ArchDocComponent class >> fromRow:declaredIn:`, mirroring
-  `ArchDocRelation class >> readFromPragma:`.
-- Example: `ArchDocComponentExamples class >> componentOfTheExamplePackage`.
-- View: `inspectionComponent: aBuilder` — a table of the classes, their package, and whether each is
-  a resident of the declaring package.
+- `ArchDocComponent class >> fromTableRow: declaredIn:`, mirroring
+  `ArchDocRelation class >> fromTableRow:declaredIn:`.
+- `classes` answers only the names the image holds; `unknownClassNames` answers the rest, so a
+  renamed or unloaded class is a finding of the checker rather than a silent gap in the diagram.
+- Example: `ArchDocComponentExamples class >> glyphCache`, which names one class the image does not
+  hold on purpose.
+- View: `inspectionClasses:` — every name of the row with what the image says about it.
 
 ### A2 — `ArchDocComponentMap`
 
-The whole map of a project, built from one manifest.
+The whole map of a route, declared by a subclass.
 
-- `ArchDocComponentMap class >> onManifest:` and `onPackageNamed:` (which finds the manifest).
-- `components`, `componentOf: aClass`, `componentNamed:`, `packageNames` (every package the mapped
-  classes live in), `unmappedClasses`, `ambiguousClasses`, `unknownClassNames`.
-- Red test: a map over `ArchDoc-Examples` answers one component per row; a class named twice is
-  ambiguous; a class of a claimed package named nowhere is unmapped.
-- The example package gets its own `archDocComponents`, including, on purpose, one ambiguous class
-  and one unmapped class, so the checker has something to find — the same trick as
-  `ArchDocBrokenSubject`.
+- `ArchDocComponentMap class >> components` and `class >> packageNames` are the two declarations a
+  subclass writes; `class >> maps` answers every concrete subclass.
+- `components`, `componentOf: aClass`, `componentNamed:`, `claimedClasses`, `unmappedClasses`,
+  `ambiguousClasses`, `unknownClassNames`.
+- Red test: a map over `ArchDoc-Examples` answers one component per row, in declaration order; a
+  class named twice is ambiguous; a class of a claimed package named nowhere is unmapped.
+- `ArchDocExampleMap`, in `ArchDoc-Examples`, carries one ambiguous class and one unmapped class on
+  purpose, so the checker has something to find — the same trick as `ArchDocBrokenSubject`.
 
 ### A3 — checker findings at component altitude
 
@@ -153,44 +164,49 @@ the popup.
 
 ### A5 — drawing a component
 
-The renderer needs no new class, but it needs to describe a component rather than a class:
+The renderer needs no new class, but it needs two things it does not have:
 
-- the box holds the component name and the number of classes;
-- the popup holds the intention and the class names;
-- resident and visitor fills apply to the packages the component's classes live in: a component
-  wholly outside the drawn package is a visitor.
+- a box that holds the component name and the number of classes, with the intention and the class
+  names in the popup;
+- a layout that follows declaration order — components in a row, left to right, in the order
+  `components` answers, with the edges attaching to the borders as they already do. A backward edge
+  is drawn below the row, so that it is seen.
 
-Red test: the box label of a component names the component and not its first class; the legend
-(`legendRows`) gains no new row, because the styles are the same ones.
+Resident and visitor fills apply to the packages the component's classes live in: a component wholly
+outside the drawn package is a visitor.
 
-### A6 — drill-down
+- Red test: the box label of a component names the component and not its first class; two successive
+  components sit in increasing x and share a y; the legend (`legendRows`) gains no new row, because
+  the styles are the same ones.
 
-`ArchDocGraphRenderer >> descendInto: aComponent` replaces the canvas contents with the class graph
-of that component, and `ascend` returns to the component graph.
-The click handler sends those messages; the test sends them directly, because a test that fakes a
-mouse tests Roassal rather than us.
+### A6 — a click opens the component
 
-- Red test: after `descendInto:`, the node set is the component's classes, and a breadcrumb shape
-  names the component; after `ascend`, the node set is the components again.
-- The canvas stays one canvas, so the inspector tab does not have to be rebuilt.
+A click on a component's shape inspects its model. The handler is one line on the shape; the test
+asserts that the shape carries the component as its model and that the component's own views build,
+because a test that fakes a mouse tests Roassal rather than us.
+
+- `ArchDocComponent` gains `inspectionRelations:` — the class-level edges that cross its border, read
+  from the map — beside the `inspectionClasses:` of A1, and `inspectionDiagram:` in the Roassal
+  package, which draws the class graph of its own classes.
+- Red test: the diagram of a component holds one node per loaded class of that component.
 
 ### A7 — the tabs, and the first real map
 
-In `VectorGraphics-Documentation`:
+In `ArchDoc-Roassal` and `VectorGraphics-Documentation`:
 
-- `Package >> inspectionComponents: aBuilder`, order 85, gated as the *Architecture* tab is, so
-  components come before classes.
-- The *Architecture* tab stays, at class altitude, for the package in hand.
+- `ArchDocComponentMap >> inspectionComponents:` (the diagram), `inspectionFindings:` (what the
+  checker says about this map), and, after Phase C, `inspectionReadingOrder:`.
+- `Package >> inspectionComponents: aBuilder`, order 85, gated on a map claiming that package, so
+  components come before classes. The *Architecture* tab stays, at class altitude.
 
-In VectorGraphics itself: write `archDocComponents` on `ManifestVectorGraphicsCanvasFonts`, covering
-the font route across `VectorGraphics-Canvas-Fonts` and `VectorGraphics-Bloc-Text`, between six and
-eight components.
+In VectorGraphics itself: write `VGFontRouteMap` over `VectorGraphics-Canvas-Fonts` (13 classes) and
+`VectorGraphics-Bloc-Text` (8), about five components.
 `VGArchitectureTest` gains a test that every class of those packages is mapped, so a new class
 cannot be added to the route silently.
 
 **Cost: about two sessions.** This is the unit that answers the original complaint, and it should be
 built before the rest of the font documentation (slice two of `FONT-ARCHDOC-PLAN.md`), because
-`VectorGraphics-TrueType` has forty-seven classes and would reproduce the heap of text at class
+`VectorGraphics-TrueType` has forty-four classes and would reproduce the heap of text at class
 altitude however well the boxes are spaced.
 
 ## 5. Phase B — the package graph

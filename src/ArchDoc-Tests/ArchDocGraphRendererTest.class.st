@@ -57,13 +57,19 @@ ArchDocGraphRendererTest >> testARendererIsBuiltFromAPackageNameAlone [
 ArchDocGraphRendererTest >> testAnArrowHeadStopsAtTheEdgeOfTheBoxItPointsAt [
 	"A line drawn between two centres puts its arrow head in the middle of the target's name,
 	 where it is read as a stray mark over a word. It must stop at the border of the box: a point
-	 on the border is right, a point inside it is not."
+	 on the border is right, a point a whole pixel inside it is not. A self-holding is left out,
+	 since a line from a box to itself has no border to stop at. The bounds are read by hand,
+	 because Rectangle >> insetBy: normalises a box of negative coordinates and answers a box
+	 that holds the point."
 
-	| renderer line target |
+	| renderer line box end |
 	renderer := ArchDocGraphRenderer onPackageNamed: 'ArchDoc-Examples'.
-	line := renderer canvas lines detect: [ :each | each model isUse not ].
-	target := line to.
-	self deny: ((target encompassingRectangle insetBy: 1) containsPoint: line endPoint)
+	line := renderer canvas lines detect: [ :each |
+		each model isUse not and: [ each model source ~= each model target ] ].
+	box := line to encompassingRectangle.
+	end := line endPoint.
+	self deny: ((end x between: box left + 1 and: box right - 1)
+		and: [ end y between: box top + 1 and: box bottom - 1 ])
 ]
 
 { #category : 'tests' }
