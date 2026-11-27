@@ -119,3 +119,24 @@ ArchDocComponentTest >> testTheRelationsViewSaysWhichPartEachArrowRunsToAndItsKi
 		assert: (rows includes: 'from' -> 'Holders')
 		description: 'an arrow pointing at the part is read as coming from the other part'
 ]
+
+{ #category : 'tests - views' }
+ArchDocComponentTest >> testTheWhereToStartViewOrdersTheClassesOfThePartItself [
+	"A reader who has picked a part asks the same question one altitude down: which of its
+	 classes first. The tab answers the order over the part's own class graph, so a class the
+	 rest of the part reaches is at the head, and it asks ArchDocReadingOrder rather than
+	 scoring anything itself."
+
+	| part presenter context order |
+	part := ArchDocExampleMap new componentNamed: 'Examples'.
+	context := StInspectionContext new
+		inspectedObject: part;
+		methodSelector: #inspectionWhereToStart:;
+		yourself.
+	presenter := context newInspectionPresenterOnApplication: SpApplication new.
+	order := ArchDocReadingOrder on: part graph.
+	self assert: presenter items asArray equals: order nodesInOrder.
+	presenter items do: [ :item |
+		presenter columns do: [ :column |
+			self deny: (column evaluation value: item) isNil ] ]
+]

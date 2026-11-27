@@ -142,6 +142,16 @@ ArchDocComponent >> inspectionRelations: aBuilder [
 		yourself
 ]
 
+{ #category : 'inspector' }
+ArchDocComponent >> inspectionWhereToStart: aBuilder [
+	"Which of my classes to read first. The order and the table are ArchDocReadingOrder's, built
+	 through the same builder, so the rows a reader sees here are the rows the order shows
+	 anywhere else."
+
+	<inspectorPresentationOrder: 3 title: 'Where to start'>
+	^ (ArchDocReadingOrder on: self graph) inspectionWhereToStart: aBuilder
+]
+
 { #category : 'accessing' }
 ArchDocComponent >> intention [
 	^ intention
