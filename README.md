@@ -30,7 +30,52 @@ From those declarations ArchDoc generates:
 ```smalltalk
 Metacello new
 	baseline: 'ArchDoc';
-	repository: 'gitlocal:///home/me/workspace/iceberg/rvillemeur/ArchDoc/src';
+	repository: 'github://rvillemeur/ArchDoc:main/src';
+	load
+```
+
+`load` alone loads the `default` group: the model and the Roassal renderers. The other groups are
+loaded by name.
+
+```smalltalk
+"the model alone, with no graphics library"
+Metacello new
+	baseline: 'ArchDoc';
+	repository: 'github://rvillemeur/ArchDoc:main/src';
+	load: 'core'.
+
+"the examples and the suite as well"
+Metacello new
+	baseline: 'ArchDoc';
+	repository: 'github://rvillemeur/ArchDoc:main/src';
+	load: #( 'default' 'examples' 'tests' )
+```
+
+| Group | Loads |
+|---|---|
+| `core` | `ArchDoc-Core` alone. No graphics library is fetched. |
+| `default` | `ArchDoc-Core` and `ArchDoc-Roassal`, which pulls Roassal. |
+| `examples` | `ArchDoc-Examples`. |
+| `tests` | `ArchDoc-Tests`. |
+
+Roassal is pinned by this baseline alone, at `github://pharo-graphics/Roassal:master`. A project
+that loads ArchDoc must not pin Roassal a second time in the same load: two pins of one project
+build a Metacello conflict.
+
+### From a local checkout
+
+```smalltalk
+Metacello new
+	baseline: 'ArchDoc';
+	repository: 'gitlocal:///path/to/ArchDoc/src';
 	onConflictUseIncoming;
 	load
+```
+
+### From another project's baseline
+
+```smalltalk
+spec
+	baseline: 'ArchDoc'
+	with: [ spec repository: 'github://rvillemeur/ArchDoc:main/src'; loads: #( 'default' ) ]
 ```
