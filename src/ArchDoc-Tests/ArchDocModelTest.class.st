@@ -122,6 +122,26 @@ ArchDocModelTest >> testTheExampleGraphCarriesTheThreeKindsOfArrow [
 ]
 
 { #category : 'tests' }
+ArchDocModelTest >> testTheGraphCarriesTheEntryPointsTheManifestDeclares [
+	"Where to start reading a package is the one thing its author knows and no formula does, so
+	 the manifest states it and the graph carries it. A name the package does not define is no
+	 node of the graph — ManifestArchDocExamples names one on purpose — and the checker is what
+	 reports it."
+
+	| model |
+	model := ArchDocModel onPackageNamed: 'ArchDoc-Examples'.
+	self
+		assert: model entryPointNames asArray
+		equals: #( #ArchDocHiddenSubject #ArchDocDeclaredSubject #ArchDocNoSuchSubject ).
+	self
+		assert: model graph entryNodes
+		equals: { ArchDocHiddenSubject. ArchDocDeclaredSubject }.
+	self
+		assert: (ArchDocModel onPackageNamed: 'ArchDoc-Tests') graph entryNodes
+		equals: #()
+]
+
+{ #category : 'tests' }
 ArchDocModelTest >> testThePackageReadsWhatItsClassesThemselvesHold [
 	"A cache a class keeps for the whole session is part of the architecture, so the model must
 	 read archClassRelations as well as the instance-side declarations."

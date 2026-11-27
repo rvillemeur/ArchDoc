@@ -1,12 +1,16 @@
 "
-I read one package's declarations and say what is wrong with them. I answer four collections of `ArchDocFinding`:
+I read one package's declarations and say what is wrong with them. I answer these collections of `ArchDocFinding`:
 
 - `unresolvedRelations` — a declaration naming a class this image does not hold.
 - `missingOpposites` — a declared opposite role the target does not declare back.
 - `sampleInstanceViolations` — a class-side `<sampleInstance>` example whose object contradicts its class's declarations. I read its slots by reflection, never by sending accessors, so I read a class that hides what it holds and I build nothing by reading. A cache nobody has built reads as absent, which is no violation.
+- `classSideViolations` — a class object whose own kept cache holds the wrong kind of thing.
 - `forbiddenDependencies` — an edge reaching a package the package's manifest forbids, read from `archDocForbiddenDependencies` on the manifest class.
+- `unknownEntryPoints` — an entry point the manifest declares, read from `archDocEntryPoints`, that names no class of the package. An entry point is a promise to a reader, so one pointing at nothing is as much a fault as a declaration naming an unloaded class.
+- `brokenExamples` — an example of the package that raises when it is run.
+- `componentFindings` — what every component map claiming this package says against itself.
 
-`findings` answers all four. An architecture test is a test over those answers:
+`findings` answers all of them. An architecture test is a test over those answers:
 
 ```
 | checker |
@@ -17,6 +21,8 @@ self assertEmpty: checker findings
 I read the examples of the package named by `samplePackageName`, which is my model's package with `-Examples` appended, and the model's own package when there is none.
 
 I judge, I never change: no declaration, no class and no live object is modified by any answer of mine.
+
+
 "
 Class {
 	#name : 'ArchDocChecker',
@@ -149,12 +155,12 @@ ArchDocChecker >> findings [
 	"Everything I can say about the package, in one collection: declarations naming a class the
 	 image does not answer, declarations with no reciprocal on the other side, live objects that
 	 contradict their class's declarations, classes that contradict their own, edges reaching a
-	 package the manifest forbids, examples that cannot run, and what a map claiming this package
-	 says about its own coverage."
+	 package the manifest forbids, entry points naming no class of the package, examples that
+	 cannot run, and what a map claiming this package says about its own coverage."
 
 	^ self unresolvedRelations , self missingOpposites , self sampleInstanceViolations
-		, self classSideViolations , self forbiddenDependencies , self brokenExamples
-		, self componentFindings
+		, self classSideViolations , self forbiddenDependencies , self unknownEntryPoints
+		, self brokenExamples , self componentFindings
 ]
 
 { #category : 'checking' }
@@ -379,6 +385,25 @@ ArchDocChecker >> samplePackageName: aString [
 { #category : 'initialization' }
 ArchDocChecker >> setModel: anArchDocModel [
 	model := anArchDocModel
+]
+
+{ #category : 'checking' }
+ArchDocChecker >> unknownEntryPoints [
+	"An entry point the manifest declares that names no class of the package. It is a promise to
+	 a reader — start here — so one pointing at nothing is as much a fault as a declaration
+	 naming a class the image does not hold. The names the package does define are no findings,
+	 and a class of another package is not an entry point of this one: a reader told to start
+	 outside the package is told to start somewhere else."
+
+	| defined |
+	defined := (model package definedClasses collect: [ :each | each name asSymbol ]) asSet.
+	^ (model entryPointNames reject: [ :each | defined includes: each asSymbol ])
+		collect: [ :each |
+			ArchDocFinding
+				kind: #unknownEntryPoint
+				subject: each
+				explanation: model packageName , ' names ' , each asString
+					, ' as an entry point, and defines no such class' ]
 ]
 
 { #category : 'checking' }

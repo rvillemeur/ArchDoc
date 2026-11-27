@@ -5,7 +5,11 @@ My nodes are classes and my edges are facts about them. I hold no layout and no 
 
 `ArchDocModel` builds me from one package. `ArchDocObjectGraph` builds a graph of live objects instead, which is the same shape with instances for nodes.
 
+I know four things about a node: that it is one, that it is at home — a class the drawn package defines, rather than one a declaration reaches into another package for — that edges reach it, and that the author of the package declared it an entry point, which `entryNodes` answers in the order declared. The first three are read from the code; the fourth is the one thing no formula can work out, so the manifest states it and I carry it.
+
 I answer `edgesOfKind:` so that a renderer can draw holdings, caches and inferred uses each in its own style, and `edgesFrom:` so that a view can list what one class holds.
+
+
 "
 Class {
 	#name : 'ArchDocGraph',
@@ -14,7 +18,8 @@ Class {
 		'title',
 		'nodes',
 		'edges',
-		'homeNodes'
+		'homeNodes',
+		'entryNodes'
 	],
 	#category : 'ArchDoc-Core-Graphs',
 	#package : 'ArchDoc-Core',
@@ -47,6 +52,15 @@ ArchDocGraph class >> title: aString nodes: aCollection edges: anotherCollection
 		home: homeCollection
 ]
 
+{ #category : 'initialization' }
+ArchDocGraph >> beEnteredAt: aCollection [
+	"The nodes the author of the package declared as entry points, in the order declared: that
+	 order is the author's statement, so it is kept as given and not made a set. Said after I am
+	 built, because a reader of my creation message should not have to count five arguments."
+
+	entryNodes := aCollection asArray
+]
+
 { #category : 'accessing' }
 ArchDocGraph >> describe: aNode [
 	"My nodes are classes in a package diagram, packages in a project diagram, parts in a
@@ -70,6 +84,14 @@ ArchDocGraph >> edgesOfKind: aSymbol [
 	"So that a renderer draws each kind in its own style without restating what the kinds are."
 
 	^ edges select: [ :each | each kind = aSymbol ]
+]
+
+{ #category : 'accessing' }
+ArchDocGraph >> entryNodes [
+	"The nodes the author of the package said to read first, in the order they were declared.
+	 Empty is the honest answer of a graph nobody declared an entry point for."
+
+	^ entryNodes
 ]
 
 { #category : 'testing' }
@@ -122,6 +144,13 @@ ArchDocGraph >> inspectionWhereToStart: aBuilder [
 	^ (ArchDocReadingOrder on: self) inspectionWhereToStart: aBuilder
 ]
 
+{ #category : 'testing' }
+ArchDocGraph >> isEntryPoint: aNode [
+	"Did the author of the package say to read this node first?"
+
+	^ entryNodes includes: aNode
+]
+
 { #category : 'accessing' }
 ArchDocGraph >> nodes [
 	^ nodes
@@ -148,10 +177,15 @@ ArchDocGraph >> setTitle: aString nodes: aCollection edges: anotherCollection [
 
 { #category : 'initialization' }
 ArchDocGraph >> setTitle: aString nodes: aCollection edges: anotherCollection home: homeCollection [
+	"A graph built from four facts about its nodes declares no entry point: the formula alone
+	 then decides the reading order. A builder that knows where a reader starts says so with
+	 beEnteredAt:, which is a message of its own rather than a fifth argument here."
+
 	title := aString.
 	nodes := aCollection asArray.
 	edges := anotherCollection asArray.
-	homeNodes := homeCollection asSet
+	homeNodes := homeCollection asSet.
+	entryNodes := #()
 ]
 
 { #category : 'accessing' }

@@ -46,6 +46,29 @@ ArchDocReadingOrderTest >> testAClassNothingReferencesScoresBelowAnIdenticalClas
 ]
 
 { #category : 'tests' }
+ArchDocReadingOrderTest >> testADeclaredEntryPointIsReadFirstHoweverItScores [
+	"The author of a package knows where a reader starts and the formula does not, so a declared
+	 entry point heads the list, in the order it was declared, and the computed order follows
+	 under it. ArchDocHiddenSubject is the eighth class of the examples package by score and the
+	 first by declaration, which is the whole point of declaring it."
+
+	| order ordered computed |
+	order := ArchDocReadingOrder on:
+		(ArchDocModel onPackageNamed: 'ArchDoc-Examples') graph.
+	ordered := order nodesInOrder.
+	self
+		assert: (ordered first: 2)
+		equals: { ArchDocHiddenSubject. ArchDocDeclaredSubject }.
+	self assert: (order isDeclared: ArchDocHiddenSubject).
+	self deny: (order isDeclared: ArchDocBrokenSubject).
+	computed := ordered allButFirst: 2.
+	self
+		assert: computed
+		equals: (computed asArray sorted: [ :a :b | order isRead: a before: b ]).
+	self assert: ordered asSet equals: order graph nodes asSet
+]
+
+{ #category : 'tests' }
 ArchDocReadingOrderTest >> testEveryKindOfNodeAnswersASizeAndAContainerIsTheSumOfWhatItHolds [
 	"A graph of this library holds classes, packages, components and live objects, and the order
 	 must weigh all four. A package weighs what its classes weigh and a component what the
@@ -102,6 +125,31 @@ ArchDocReadingOrderTest >> testTheWeightOfANodeIsReadOnceHoweverManyComparisonsT
 		assert: spy reads <= (spy graph nodes size * 2)
 		description: 'the source of a class was read ' , spy reads printString
 			, ' times for ' , spy graph nodes size printString , ' nodes'
+]
+
+{ #category : 'tests - view' }
+ArchDocReadingOrderTest >> testTheWhereToStartTableSaysWhichRowsTheAuthorDeclared [
+	"A reader must be able to tell a row the author put first from one the formula did, or the
+	 head of the table reads as a surprising score. Built the way the inspector builds it, and
+	 the cells are read per row, because a column block runs only when a row is drawn."
+
+	| order context presenter rows declaredOf |
+	order := ArchDocReadingOrder on:
+		(ArchDocModel onPackageNamed: 'ArchDoc-Examples') graph.
+	context := StInspectionContext new
+		inspectedObject: order;
+		methodSelector: #inspectionWhereToStart:;
+		yourself.
+	presenter := context basicNewInspectionPresenter:
+		(SpPresenterBuilder newApplication: SpApplication new).
+	rows := presenter items collect: [ :item |
+		presenter columns collect: [ :column | column evaluation value: item ] ].
+	declaredOf := [ :aNode |
+		(rows detect: [ :row | row second = aNode name asString ]) third ].
+	self assert: (declaredOf value: ArchDocHiddenSubject) equals: 'declared'.
+	self assert: (declaredOf value: ArchDocBrokenSubject) equals: ''.
+	self
+		assert: ((presenter columns collect: [ :each | each title ]) includes: 'Start')
 ]
 
 { #category : 'tests' }

@@ -130,17 +130,49 @@ ArchDocModel >> drawnUses [
 ]
 
 { #category : 'accessing' }
+ArchDocModel >> entryPointClasses [
+	"The declared entry points that are classes of my package, in the order declared. A name my
+	 package does not define is left out rather than guessed at: the checker reports it, as it
+	 reports a declaration naming a class the image does not hold."
+
+	| defined |
+	defined := Dictionary new.
+	package definedClasses do: [ :each | defined at: each name asSymbol put: each ].
+	^ self entryPointNames
+		select: [ :each | defined includesKey: each asSymbol ]
+		thenCollect: [ :each | defined at: each asSymbol ]
+]
+
+{ #category : 'accessing' }
+ArchDocModel >> entryPointNames [
+	"Where the author of my package says a reader starts, in the order declared, read from
+	 archDocEntryPoints on the manifest — the same place the forbidden dependencies are
+	 declared, because that is where Pharo already keeps what a package says about itself. A
+	 package that says nothing answers none, and the formula alone then decides the order."
+
+	| found |
+	found := OrderedCollection new.
+	package definedClasses do: [ :each |
+		(each class canUnderstand: #archDocEntryPoints)
+			ifTrue: [ found addAll: each archDocEntryPoints ] ].
+	^ found asArray
+]
+
+{ #category : 'accessing' }
 ArchDocModel >> graph [
 	"The class diagram of my package: one node per class of mine, plus every class my
 	 declarations point at, and one edge per fact — a holding, a cache, or a use between two
 	 classes the diagram already holds. The classes of my package are its home, so the drawing
-	 can tell a resident from a visitor."
+	 can tell a resident from a visitor, and the entry points its manifest declares are carried
+	 too, so a reader is told where to start by the author and not by a formula alone."
 
-	^ ArchDocGraph
+	^ (ArchDocGraph
 		title: package name
 		nodes: self nodes
 		edges: self declaredEdges , self drawnUses
-		home: (package definedClasses reject: [ :each | self isManifest: each ])
+		home: (package definedClasses reject: [ :each | self isManifest: each ]))
+			beEnteredAt: self entryPointClasses;
+			yourself
 ]
 
 { #category : 'accessing' }

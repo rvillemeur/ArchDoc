@@ -15,6 +15,8 @@ I weigh any node a graph of this library holds: a class by its methods on both s
 (ArchDocReadingOrder on: (ArchDocModel onPackageNamed: 'ArchDoc-Core') graph) nodesInOrder
 ```
 
+**What the author said comes first.** A package whose manifest declares `archDocEntryPoints` has those classes at the head of my list, in the order declared, whatever they score: where a reader starts is the one thing the author of a package knows and no formula does. The rest follow in the computed order, and `isDeclared:` says which rows are which so a declared row does not read as a surprising score.
+
 **A reading order, not importance.** A big class the whole package reaches is where a newcomer learns most per page read. It is not thereby the best class, the most stable one, or the one to change first.
 "
 Class {
@@ -55,6 +57,14 @@ ArchDocReadingOrder >> countReaches [
 ]
 
 { #category : 'accessing' }
+ArchDocReadingOrder >> declaredNodes [
+	"The entry points my graph carries that are nodes of it, in the order declared. Asked of the
+	 graph, which read them from the manifest, so this order cannot disagree with the diagram."
+
+	^ self graph entryNodes select: [ :each | self graph nodes includes: each ]
+]
+
+{ #category : 'accessing' }
 ArchDocReadingOrder >> fanInOf: aNode [
 	"How many nodes of my graph point at aNode. Counted inside the graph alone: the question the
 	 order answers is where to start reading this package, so a reference from outside it is
@@ -88,10 +98,12 @@ ArchDocReadingOrder >> initialize [
 
 { #category : 'inspector' }
 ArchDocReadingOrder >> inspectionWhereToStart: aBuilder [
-	"Where a newcomer starts, one row per node, the first row first. The score is shown rounded,
-	 since a reader compares rows and does not read a logarithm, and the two terms it is made of
-	 are shown beside it so that a surprising order can be understood rather than believed. The
-	 order is read once into a local, because a column block runs per drawn row."
+	"Where a newcomer starts, one row per node, the first row first. The rows the author of the
+	 package declared head the table and say so, since a declared row otherwise reads as a
+	 surprising score. The score is shown rounded, as a reader compares rows and does not read a
+	 logarithm, and the two terms it is made of are shown beside it so that a surprising order
+	 can be understood rather than believed. The order is read once into a local, because a
+	 column block runs per drawn row."
 
 	<inspectorPresentationOrder: 1 title: 'Where to start'>
 	| ordered |
@@ -102,6 +114,9 @@ ArchDocReadingOrder >> inspectionWhereToStart: aBuilder [
 			evaluated: [ :each | (ordered indexOf: each) printString ]) width: 60);
 		addColumn: (SpStringTableColumn title: 'Node'
 			evaluated: [ :each | self graph describe: each ]);
+		addColumn: ((SpStringTableColumn title: 'Start'
+			evaluated: [ :each | (self isDeclared: each) ifTrue: [ 'declared' ] ifFalse: [ '' ] ])
+				width: 90);
 		addColumn: ((SpStringTableColumn title: 'Score'
 			evaluated: [ :each | (self scoreOf: each) rounded printString ]) width: 90);
 		addColumn: ((SpStringTableColumn title: 'Reached by'
@@ -109,6 +124,14 @@ ArchDocReadingOrder >> inspectionWhereToStart: aBuilder [
 		addColumn: ((SpStringTableColumn title: 'Source'
 			evaluated: [ :each | (self sizeOf: each) printString , ' chars' ]) width: 110);
 		yourself
+]
+
+{ #category : 'testing' }
+ArchDocReadingOrder >> isDeclared: aNode [
+	"Was this node named an entry point by the author of the package, rather than put at the head
+	 by the formula?"
+
+	^ self graph isEntryPoint: aNode
 ]
 
 { #category : 'private' }
@@ -132,11 +155,14 @@ ArchDocReadingOrder >> isRead: aNode before: anotherNode [
 
 { #category : 'accessing' }
 ArchDocReadingOrder >> nodesInOrder [
-	"The nodes of my graph, the one to read first at the head. A total order, so that a reader
-	 who asks twice reads the same list."
+	"The nodes of my graph, the one to read first at the head: the entry points the author of the
+	 package declared, in the order declared, and under them the computed order of the rest. A
+	 total order, so that a reader who asks twice reads the same list."
 
-	^ self graph nodes asArray
-		sorted: [ :a :b | self isRead: a before: b ]
+	| declared |
+	declared := self declaredNodes.
+	^ declared , ((self graph nodes reject: [ :each | declared includes: each ])
+		asArray sorted: [ :a :b | self isRead: a before: b ])
 ]
 
 { #category : 'private' }

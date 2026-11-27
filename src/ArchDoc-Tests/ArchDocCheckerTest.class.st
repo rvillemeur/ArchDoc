@@ -77,6 +77,23 @@ ArchDocCheckerTest >> testASampleInstanceContradictingItsDeclarationIsReported [
 ]
 
 { #category : 'tests' }
+ArchDocCheckerTest >> testAnEntryPointNamingNoClassOfThePackageIsReported [
+	"ManifestArchDocExamples names ArchDocNoSuchSubject on purpose. An entry point is a promise
+	 to a reader — start here — so one pointing at nothing is as much a fault as a declaration
+	 naming an unloaded class, and the two classes it names rightly are not findings."
+
+	| findings |
+	findings := self checkerOnTheExamples unknownEntryPoints.
+	self assert: findings size equals: 1.
+	self assert: findings first subject equals: #ArchDocNoSuchSubject.
+	self assert: findings first kind equals: #unknownEntryPoint.
+	self
+		assert: (findings first explanation includesSubstring: 'ArchDocNoSuchSubject').
+	self assert: ((self checkerOnTheExamples findings collect: [ :each | each kind ]) asSet
+		includes: #unknownEntryPoint)
+]
+
+{ #category : 'tests' }
 ArchDocCheckerTest >> testAnExampleThatRaisesIsReportedAndStopsNothing [
 	"Reading a package must not depend on every example of it running. An example that raises is
 	 a finding of its own, with the error in it, and the other examples are still read."
