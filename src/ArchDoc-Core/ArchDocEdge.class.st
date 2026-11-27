@@ -47,6 +47,14 @@ ArchDocEdge >> = anObject [
 		and: [ target = anObject target and: [ kind = anObject kind ] ] ]
 ]
 
+{ #category : 'accessing' }
+ArchDocEdge >> count [
+	"How many class-level edges I stand for: myself alone, until a map lifts a group of me into
+	 one arrow between two components."
+
+	^ 1
+]
+
 { #category : 'describing' }
 ArchDocEdge >> describe: anObject [
 	"A node is a class in a package diagram and an object in an object graph, so a renderer and

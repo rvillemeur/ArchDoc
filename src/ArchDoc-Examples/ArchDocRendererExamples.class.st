@@ -14,6 +14,15 @@ Class {
 }
 
 { #category : 'examples' }
+ArchDocRendererExamples class >> componentDiagram [
+	"The component diagram of the example map: three parts in declaration order, the backward
+	 edges under the row."
+
+	<sampleInstance>
+	^ ArchDocComponentRenderer onMap: ArchDocExampleMap new
+]
+
+{ #category : 'examples' }
 ArchDocRendererExamples class >> openClassDiagramOfTheExamplesPackage [
 	"Open the picture in a window, which is the one-click answer to what this looks like."
 

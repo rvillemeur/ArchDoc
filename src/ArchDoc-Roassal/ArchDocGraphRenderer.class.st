@@ -63,7 +63,7 @@ ArchDocGraphRenderer >> addLineFor: anEdge [
 	^ line
 ]
 
-{ #category : 'rendering' }
+{ #category : 'drawing' }
 ArchDocGraphRenderer >> addShapeFor: aNode [
 	"A label inside a box. The box is what gives the layout an extent to keep clear: a bare label
 	 states no size, so a force layout packs the nodes until the words lie on top of one another
@@ -72,7 +72,7 @@ ArchDocGraphRenderer >> addShapeFor: aNode [
 
 	| label box shape |
 	label := RSLabel new
-		text: (graph describe: aNode);
+		text: (self labelFor: aNode);
 		fontSize: 10;
 		color: Color black;
 		yourself.
@@ -184,6 +184,14 @@ ArchDocGraphRenderer >> inspectionLegend: aBuilder [
 ]
 
 { #category : 'accessing' }
+ArchDocGraphRenderer >> labelFor: aNode [
+	"The words inside a node's box. A class diagram writes the class name; a component diagram
+	 writes the name of the part and its size, so the hook is here."
+
+	^ graph describe: aNode
+]
+
+{ #category : 'accessing' }
 ArchDocGraphRenderer >> legendRows [
 	"What each style of the drawing means: name, what carries it, and the colour. The colours are
 	 asked of the renderer rather than restated, so the legend cannot drift from the picture."
@@ -246,6 +254,16 @@ ArchDocGraphRenderer >> residentColor [
 { #category : 'initialization' }
 ArchDocGraphRenderer >> setGraph: anArchDocGraph [
 	graph := anArchDocGraph
+]
+
+{ #category : 'accessing' }
+ArchDocGraphRenderer >> shapeFor: aNode [
+	"The box drawn for a node, so a reader and a test ask the renderer rather than reach into it.
+	 Asking for a shape draws the diagram if it is not drawn yet, since there is no shape before
+	 then; during the drawing the canvas is already in place, so this does not recur."
+
+	self canvas.
+	^ shapes at: aNode
 ]
 
 { #category : 'rendering' }
