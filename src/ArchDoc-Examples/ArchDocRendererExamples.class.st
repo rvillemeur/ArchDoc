@@ -40,6 +40,15 @@ ArchDocRendererExamples class >> openObjectGraphOfASubject [
 ]
 
 { #category : 'examples' }
+ArchDocRendererExamples class >> projectDiagram [
+	"The package altitude of this library drawn: four packages, the arrows between them, and the
+	 one arrow the manifest of the examples package forbids, in red."
+
+	<sampleInstance>
+	^ ArchDocPackageRenderer onProject: (ArchDocProjectModel onPrefix: 'ArchDoc')
+]
+
+{ #category : 'examples' }
 ArchDocRendererExamples class >> rendererOfTheExamplesPackage [
 	"A renderer over the class diagram of ArchDoc-Examples: holdings, caches and uses at once."
 
