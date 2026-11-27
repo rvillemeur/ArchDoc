@@ -21,6 +21,18 @@ Class {
 	#tag : 'Graphs'
 }
 
+{ #category : 'describing' }
+ArchDocGraph class >> describe: anObject [
+	"What a box and a table row call a node, in one place, because a graph of this library holds
+	 classes at one altitude, packages at another, parts at a third, and live objects in an
+	 object graph. Anything that has a name is called by it; a live object that has none prints
+	 itself, which is what a reader of an object graph wants to read."
+
+	^ (anObject respondsTo: #name)
+		ifTrue: [ anObject name asString ]
+		ifFalse: [ anObject printString ]
+]
+
 { #category : 'instance creation' }
 ArchDocGraph class >> title: aString nodes: aCollection edges: anotherCollection [
 	^ self new setTitle: aString nodes: aCollection edges: anotherCollection
@@ -35,13 +47,12 @@ ArchDocGraph class >> title: aString nodes: aCollection edges: anotherCollection
 		home: homeCollection
 ]
 
-{ #category : 'describing' }
+{ #category : 'accessing' }
 ArchDocGraph >> describe: aNode [
-	"My nodes are classes in a package diagram and objects in an object graph."
+	"My nodes are classes in a package diagram, packages in a project diagram, parts in a
+	 component diagram and objects in an object graph. My class says how each is named."
 
-	^ aNode isClass
-		ifTrue: [ aNode name ]
-		ifFalse: [ aNode printString ]
+	^ self class describe: aNode
 ]
 
 { #category : 'accessing' }

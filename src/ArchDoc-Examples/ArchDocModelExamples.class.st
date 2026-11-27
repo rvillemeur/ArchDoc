@@ -50,3 +50,12 @@ ArchDocModelExamples class >> objectGraphOfASubjectHoldingTwoOthers [
 	subject children add: ArchDocDeclaredSubject new.
 	^ ArchDocObjectGraph of: subject
 ]
+
+{ #category : 'examples' }
+ArchDocModelExamples class >> projectOfArchDocItself [
+	"The package altitude of this library, read from the image: four packages, the arrows
+	 between them, and the ones that reach outside."
+
+	<sampleInstance>
+	^ ArchDocProjectModel onPrefix: 'ArchDoc'
+]

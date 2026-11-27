@@ -55,14 +55,13 @@ ArchDocEdge >> count [
 	^ 1
 ]
 
-{ #category : 'describing' }
+{ #category : 'accessing' }
 ArchDocEdge >> describe: anObject [
-	"A node is a class in a package diagram and an object in an object graph, so a renderer and
-	 a table ask for a description rather than for a class name."
+	"My ends are classes in a package diagram, packages in a project diagram and parts in a
+	 component diagram. ArchDocGraph says how a node of any altitude is named, so a table of my
+	 rows and a box of the diagram cannot call the same node two things."
 
-	^ anObject isClass
-		ifTrue: [ anObject name ]
-		ifFalse: [ anObject printString ]
+	^ ArchDocGraph describe: anObject
 ]
 
 { #category : 'comparing' }
