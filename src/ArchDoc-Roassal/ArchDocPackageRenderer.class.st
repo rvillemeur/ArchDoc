@@ -73,12 +73,12 @@ ArchDocPackageRenderer >> focusColor [
 ArchDocPackageRenderer >> inspectionOmissions: aBuilder [
 	"What the picture leaves out: every reference out of the project that no declaration states.
 	 It is the wiring — the kernel, the collections, the widgets — and a diagram holding it
-	 answers no question, but a reader must be told it was dropped rather than guess."
+	 answers no question, but a reader must be told it was dropped rather than guess. The project
+	 answers which arrows those are; this tab only writes them down."
 
 	<inspectorPresentationOrder: 2 title: 'Left out'>
 	^ aBuilder newTable
-		items: (project edges reject: [ :each |
-			project drawnEdges includes: each ]);
+		items: project omittedEdges;
 		addColumn: ((SpStringTableColumn title: 'Reaches from' evaluated: [ :each |
 			each sourceDescription ]) width: 240);
 		addColumn: ((SpStringTableColumn title: 'To' evaluated: [ :each |

@@ -74,6 +74,21 @@ ArchDocProjectModelTest >> testTheForbiddenArrowsAreExactlyWhatTheCheckerReports
 ]
 
 { #category : 'tests' }
+ArchDocProjectModelTest >> testTheOmittedArrowsAreTheOnesTheDiagramDoesNotDraw [
+	"The model holds the rule for what is drawn, so it answers what is left out as well: a view
+	 that worked the difference out itself would hold the rule a second time."
+
+	| project drawn omitted |
+	project := ArchDocProjectModel onPrefix: 'ArchDoc'.
+	drawn := project drawnEdges.
+	omitted := project omittedEdges.
+	self assert: drawn size + omitted size equals: project edges size.
+	self assert: (omitted allSatisfy: [ :each | (drawn includes: each) not ]).
+	self assert: (omitted allSatisfy: [ :each | each isUse ]).
+	self deny: omitted isEmpty
+]
+
+{ #category : 'tests' }
 ArchDocProjectModelTest >> testThePackagesViewCountsTheClassesOfEachPackageAndTheArrowsItSends [
 	"A reader opening a project wants the size of each package and how far it reaches before the
 	 picture. The columns are counted from the project itself, so they cannot disagree with it."

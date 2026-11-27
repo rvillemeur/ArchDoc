@@ -157,6 +157,18 @@ ArchDocProjectModel >> nodes [
 ]
 
 { #category : 'accessing' }
+ArchDocProjectModel >> omittedEdges [
+	"The arrows the diagram leaves out: a reference out of the project that no declaration
+	 states. I answer it rather than a view, because the rule for what is drawn is mine and a
+	 reader must be told what was dropped rather than guess. The drawn set is read once: asking
+	 for it per arrow turned a table of four hundred rows into a tenth of a second."
+
+	| drawn |
+	drawn := self drawnEdges asSet.
+	^ self edges reject: [ :each | drawn includes: each ]
+]
+
+{ #category : 'accessing' }
 ArchDocProjectModel >> packageNamed: aString [
 	"The package of this project under that name, so a reader and a test name a node rather than
 	 reach for the package organizer."
