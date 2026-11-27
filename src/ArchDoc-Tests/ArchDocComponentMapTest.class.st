@@ -217,3 +217,25 @@ ArchDocComponentMapTest >> testThePackagesViewNamesEachClaimedPackageAndHowManyC
 		assert: rows first
 		equals: 'ArchDoc-Examples' -> map claimedClasses size printString
 ]
+
+{ #category : 'tests - views' }
+ArchDocComponentMapTest >> testTheWhereToStartViewOrdersTheComponentsOfTheLiftedGraph [
+	"One altitude up, the same question: which part of the map to read first. The order is over
+	 the lifted graph, so a part the rest of the map reaches is at the head and a part weighs
+	 what the classes it names weigh."
+
+	| map presenter context order |
+	map := ArchDocExampleMap new.
+	context := StInspectionContext new
+		inspectedObject: map;
+		methodSelector: #inspectionWhereToStart:;
+		yourself.
+	presenter := context newInspectionPresenterOnApplication: SpApplication new.
+	order := ArchDocReadingOrder on: map graph.
+	self assert: presenter items asArray equals: order nodesInOrder.
+	self assert: (presenter items allSatisfy: [ :each | each isKindOf: ArchDocComponent ]).
+	self
+		assert: (order sizeOf: map components first)
+		equals: (map components first classes
+			inject: 0 into: [ :sum :each | sum + (order sizeOf: each) ])
+]

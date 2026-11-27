@@ -289,34 +289,64 @@ it is the picture that says where a package sits, which no class diagram can.
 
 ## 6. Phase C — reading order
 
-Three units.
+Three units, all done.
 
-### C1 — the score
+### C1 — the score (done)
 
-Archify's formula, with the one substitution the image forces:
+`ArchDocReadingOrder on: aGraph` answers `nodesInOrder`, `scoreOf:`, `fanInOf:`, `fanOutOf:` and
+`sizeOf:`. Archify's formula, with the one substitution the image forces:
 
 ```
 score := size * (1 + (1 + fanIn) log: 2)
 ```
 
-where `fanIn` is the number of classes that reference the class, and `size` is the total source size
-of its methods, both sides — Pharo has no file to count lines of.
-Ties break by fan-in, then fan-out, then name, as archify's do.
+`size` is the characters of source of a node's methods, both sides — Pharo has no file to count the
+lines of. `fanIn` is how many other nodes of the *same graph* point at the node. Ties break by
+fan-in, then fan-out, then name, as archify's do, so the order is total and a reader who asks twice
+reads the same list. The method comment of `scoreOf:` carries the caveat verbatim: a reading order,
+not importance.
 
-- Red test: a class nothing references scores below an identical class that ten reference; the order
-  is stable across runs.
-- The method comment carries the caveat verbatim: a reading order, not importance.
+Two deviations from this section as it was written.
 
-### C2 — `Where to start`
+- **Fan-in is counted inside the graph being ordered, not across the project or the image.** The
+  question the tab answers is where to start reading *this* package; a reference from another
+  package belongs to that package's reading order. An image-wide count would also rank whatever the
+  test packages touch most.
+- **The red test could not say "a class nothing references scores below an identical class that ten
+  reference", because no two classes of this image are identical in size.** It states the fan-in
+  term alone instead, by scoring each of two classes against its own size, and a second test states
+  that the node ten others reach is read first and that the order does not change on a second
+  asking.
 
-An inspector tab on a package and on a component: the classes in reading order, with score, fan-in
-and size, selecting one opening it.
+A node of any kind answers a size, in one `sizeOf:` asking `respondsTo:` — a class by its methods on
+both sides, a package by its classes, a component by the classes it names, anything else by one.
+That is the precedent `ArchDocGraph class >> describe:` set: one place deciding, and no extension
+method on a kernel class, which Phase B withdrew after it cost 34 critiques.
 
-### C3 — the same order over components
+### C2 — `Where to start` (done)
 
-The component a newcomer should read first, by the same formula applied to the lifted graph.
+`ArchDocReadingOrder >> inspectionWhereToStart:` builds the table: reading position, node, score,
+how many nodes reach it, and its source size. The order is read once into a local, because a column
+block runs per drawn row and the sort costs 26 ms on a package of twelve classes.
 
-**Cost: about half a session.**
+The tab is offered at two altitudes by delegation — `ArchDocComponent` and, in
+`VectorGraphics-Documentation`, `Package >> inspectionWhereToStart:` at order 95, after *Neighbours*
+(80), *Components* (85) and *Architecture* (90). Each builds the order's own table through the
+builder it was handed, so the rows are the same rows everywhere and nothing is scored twice. The
+three tabs gated on this project's own packages asked the same question in three copies; they now
+ask `Package >> isDocumentedByThisProject`.
+
+### C3 — the same order over components (done)
+
+`ArchDocComponentMap >> inspectionWhereToStart:` orders the parts of the map by the same formula
+over the lifted graph: a part weighs what the classes it names weigh, and is reached by the parts
+the lifted arrows come from.
+
+Not built: the same tab on `ArchDocProjectModel`. A reader asking which *package* of a project to
+read first is a reasonable question, but nothing has asked it yet, and the project tab already
+answers where a package sits.
+
+**Cost: about half a session, as estimated.**
 
 ## 7. Acceptance, per unit
 
@@ -351,8 +381,9 @@ and `VGArchitectureTest` at the end of every unit that touches VectorGraphics.
 
 ## 9. Cost and benefit, stated plainly
 
-Phases A, B and C together are roughly three and a half to four sessions of the usual cycle, with no
-new external dependency beyond Roassal, which is already pinned, and no new file format.
+All three phases are built. They came to roughly the estimate — three and a half to four sessions of
+the usual cycle — with no new external dependency beyond Roassal, which was already pinned, and no
+new file format.
 They reuse `ArchDocModel`, `ArchDocChecker` and `ArchDocGraphRenderer` rather than displacing them.
 
 The benefit is one thing: a reader who opens a package sees six components with a sentence each

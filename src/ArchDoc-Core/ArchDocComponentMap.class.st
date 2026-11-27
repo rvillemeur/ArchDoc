@@ -251,6 +251,16 @@ ArchDocComponentMap >> inspectionPackages: aBuilder [
 		yourself
 ]
 
+{ #category : 'inspector' }
+ArchDocComponentMap >> inspectionWhereToStart: aBuilder [
+	"Which part of the map to read first, by the same formula one altitude up: a part weighs what
+	 the classes it names weigh, and is reached by the parts the lifted arrows come from. The
+	 order and the table are ArchDocReadingOrder's, built through the builder handed to me."
+
+	<inspectorPresentationOrder: 5 title: 'Where to start'>
+	^ (ArchDocReadingOrder on: self graph) inspectionWhereToStart: aBuilder
+]
+
 { #category : 'accessing' }
 ArchDocComponentMap >> packages [
 	^ self class packageNames collect: [ :each |
