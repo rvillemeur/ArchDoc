@@ -101,7 +101,7 @@ decided, because every unit below reads them.
 
 ## 4. Phase A — component altitude
 
-Seven units. Each unit ends with the five artefacts and clean critics (§7).
+Seven units, all done. Each unit ended with the five artefacts and clean critics (§7).
 
 ### A1 — `ArchDocComponent` (done)
 
@@ -124,7 +124,7 @@ VGFontRouteMap class >> components
   hold on purpose.
 - View: `inspectionClasses:` — every name of the row with what the image says about it.
 
-### A2 — `ArchDocComponentMap`
+### A2 — `ArchDocComponentMap` (done)
 
 The whole map of a route, declared by a subclass.
 
@@ -132,77 +132,88 @@ The whole map of a route, declared by a subclass.
   subclass writes; `class >> maps` answers every concrete subclass.
 - `components`, `componentOf: aClass`, `componentNamed:`, `claimedClasses`, `unmappedClasses`,
   `ambiguousClasses`, `unknownClassNames`.
-- Red test: a map over `ArchDoc-Examples` answers one component per row, in declaration order; a
-  class named twice is ambiguous; a class of a claimed package named nowhere is unmapped.
-- `ArchDocExampleMap`, in `ArchDoc-Examples`, carries one ambiguous class and one unmapped class on
-  purpose, so the checker has something to find — the same trick as `ArchDocBrokenSubject`.
+- `claimedClasses` drops a class that describes a package rather than belongs to its design, which
+  is a package manifest or a map, through `describesRatherThanBelongs:`.
+- `ArchDocExampleMap`, in `ArchDoc-Examples`, carries one ambiguous class, one unknown class name and
+  one unmapped class on purpose — the same trick as `ArchDocBrokenSubject` — and is marked
+  `<archDocDeliberatelyBroken>` so that no reader repairs it.
+- Views: `inspectionComponents:` (the parts, their size and their intention), `inspectionCoverage:`
+  and, from A7, `inspectionPackages:`.
 
-### A3 — checker findings at component altitude
+### A3 — checker findings at component altitude (done)
 
-Fold into `ArchDocChecker >> findings` three new kinds:
+Three new kinds, answered by the map about itself and folded into the checker of every package the
+map claims:
 
 - `#unmappedClass` — a class of a claimed package that no component names.
 - `#ambiguousClass` — a class two components name.
 - `#unknownComponentClass` — a component naming a class the image does not hold.
 
-Red test: the example map yields exactly one finding of each kind, and `findings` holds them beside
-the existing ones. The counts tab (`inspectionCounts:`) shows the new kinds without being told about
-them one by one.
+`ArchDocChecker >> maps` answers the maps claiming the package it reads, and `componentFindings`
+folds their findings in, so a reader opening a package is told its classes are unmapped without
+knowing a map exists. `ArchDocChecker >> countRows` reads the kinds off the findings themselves, so
+a kind written later appears in the summary tab with no line added for it.
 
-### A4 — the component graph
+### A4 — the component graph (done)
 
-Lift the class-level edges the model already computes.
-An edge whose source class sits in component X and whose target sits in component Y becomes one edge
-X → Y; an edge inside a component disappears; the strongest kind wins, `#holding` over `#cache` over
-`#use`; the edge carries how many class-level edges it stands for and the roles that made it, for
-the popup.
+`ArchDocComponentMap >> classEdges` reads every edge of every claimed package through the models that
+already compute them, and `edges` lifts them: one edge per ordered pair of components, the strongest
+kind winning (`#holding` over `#cache` over `#use`), an edge inside one component dropped, an edge
+touching a class no component names dropped too.
 
-- Red test: two classes of one component holding each other draw no component edge; a holding and a
-  use between the same two components draw one solid edge whose count is two.
-- `ArchDocComponentMap >> graph` answers an `ArchDocGraph` whose nodes are components, so the
-  existing renderer draws it unchanged — this is the check that the renderer was factored right.
+As built, the lifted edge is its own class, `ArchDocLiftedEdge`, a subclass of `ArchDocEdge` holding
+the count and the roles; a plain edge answers a count of one, which is what it stands for.
+`ArchDocComponent` gained `=` and `hash` over the part it names, so a map read twice answers
+components an edge and a set can match.
 
-### A5 — drawing a component
+`ArchDocComponentMap >> graph` answers an `ArchDocGraph` whose nodes are components.
 
-The renderer needs no new class, but it needs two things it does not have:
+### A5 — drawing a component (done)
 
-- a box that holds the component name and the number of classes, with the intention and the class
-  names in the popup;
-- a layout that follows declaration order — components in a row, left to right, in the order
-  `components` answers, with the edges attaching to the borders as they already do. A backward edge
-  is drawn below the row, so that it is seen.
+As built, this is a new class after all: `ArchDocComponentRenderer`, a subclass of
+`ArchDocGraphRenderer`. The class diagram keeps its force layout, which suits a graph of self
+holdings and cycles; a handful of parts in a declared order must not be laid out by one, because the
+picture would differ every time it is drawn.
 
-Resident and visitor fills apply to the packages the component's classes live in: a component wholly
-outside the drawn package is a visitor.
+- The boxes lie on one row, left to right, in declaration order. `labelFor:` is a hook on the base
+  renderer, so the component boxes name the part and its size where the class boxes name the class.
+- An edge pointing at a part declared earlier is routed below the row as an `RSPolyline`, each
+  backward edge at its own depth.
+- Every line carries the number of class edges it stands for, drawn beside it in the line's own
+  colour at full opacity.
+- `inspectionReadingOrder:` says the same thing in words: each part numbered as it is drawn, with the
+  number of its arrows that read against the order.
 
-- Red test: the box label of a component names the component and not its first class; two successive
-  components sit in increasing x and share a y; the legend (`legendRows`) gains no new row, because
-  the styles are the same ones.
+### A6 — a click opens the component (done)
 
-### A6 — a click opens the component
+Each box is wired with `when: RSMouseClick send: #openNodeFrom: to: self`, which opens the part as an
+object. The test reads the subscription rather than delivering a click, since delivering one opens a
+window, and a second test states that the object a click opens is the part the box draws.
 
-A click on a component's shape inspects its model. The handler is one line on the shape; the test
-asserts that the shape carries the component as its model and that the component's own views build,
-because a test that fakes a mouse tests Roassal rather than us.
+`ArchDocComponent` answers the questions that need the map itself: `map`, `edges` (the lifted arrows
+touching it), `classEdges` (the edges between its own classes) and `graph`. Its `inspectionRelations:`
+reads the arrows from where the part stands, and `inspectionDiagram:`, in the Roassal package, draws
+its own classes.
 
-- `ArchDocComponent` gains `inspectionRelations:` — the class-level edges that cross its border, read
-  from the map — beside the `inspectionClasses:` of A1, and `inspectionDiagram:` in the Roassal
-  package, which draws the class graph of its own classes.
-- Red test: the diagram of a component holds one node per loaded class of that component.
+### A7 — the tabs, and the first real map (done)
 
-### A7 — the tabs, and the first real map
-
-In `ArchDoc-Roassal` and `VectorGraphics-Documentation`:
-
-- `ArchDocComponentMap >> inspectionComponents:` (the diagram), `inspectionFindings:` (what the
-  checker says about this map), and, after Phase C, `inspectionReadingOrder:`.
-- `Package >> inspectionComponents: aBuilder`, order 85, gated on a map claiming that package, so
-  components come before classes. The *Architecture* tab stays, at class altitude.
-
-In VectorGraphics itself: write `VGFontRouteMap` over `VectorGraphics-Canvas-Fonts` (13 classes) and
-`VectorGraphics-Bloc-Text` (8), about five components.
-`VGArchitectureTest` gains a test that every class of those packages is mapped, so a new class
-cannot be added to the route silently.
+- `ArchDocComponentMap >> inspectionDiagram:`, order 0, in `ArchDoc-Roassal`: the picture the whole
+  altitude is for. The name `inspectionComponents:` was already the parts table of A2, so the diagram
+  took the name every other diagram tab of this project has.
+- `ArchDocComponentMap >> inspectionPackages:`: the packages the map claims, each with the number of
+  classes it is answerable for there.
+- `Package >> inspectionComponents:`, order 85, in `VectorGraphics-Documentation`, gated by
+  `inspectionComponentsContext:` on `Package >> archDocComponentMap` being non-nil, so components come
+  before classes and the tab appears nowhere a map does not claim. The *Architecture* tab stays, at
+  class altitude.
+- `VGFontRouteMap` maps `VectorGraphics-Canvas-Fonts` and `VectorGraphics-Bloc-Text` in six parts —
+  the face, the scaled font, the glyph cache, the measurements, the Bloc seat and the Cairo route —
+  which is one more than this plan guessed, because the Bloc seat and the Cairo route are two
+  different routes and not one.
+- The coverage test went to `VGFontArchitectureTest`, which already holds `fontPackageNames`, rather
+  than to `VGArchitectureTest`: every class of the two packages is in exactly one part, no part names
+  a class the image does not hold, and the map reports no finding. `VGArchitectureTest
+  allowedDependencies` gained the two edges the new test and the new example make.
 
 **Cost: about two sessions.** This is the unit that answers the original complaint, and it should be
 built before the rest of the font documentation (slice two of `FONT-ARCHDOC-PLAN.md`), because
